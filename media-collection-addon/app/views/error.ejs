@@ -1,0 +1,38 @@
+<%
+  /*
+   * views/error.ejs
+   * Generic error page.
+   */
+%>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fehler – MediaDock</title>
+  <link rel="stylesheet" href="<%= base %>/public/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="<%= base %>/">
+      <span class="logo-icon">🎵</span>
+      <span class="logo-text">MediaDock</span>
+    </a>
+    <nav>
+      <a href="<%= base %>/">Sammlung</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="empty-state">
+      <h1>Oops!</h1>
+      <p><%= message || 'Ein unbekannter Fehler ist aufgetreten.' %></p>
+      <a href="<%= base %>/" class="btn btn-primary">Zur Startseite</a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <small>MediaDock &mdash; persönliche Mediensammlung</small>
+  </footer>
+</body>
+</html>

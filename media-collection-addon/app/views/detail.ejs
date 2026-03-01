@@ -1,0 +1,131 @@
+<%
+  /*
+   * views/detail.ejs
+   * Detail view for a single media item.
+   * Allows editing notes, toggling owned/wishlist and deleting the entry.
+   */
+%>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= item.title %> – MediaDock</title>
+  <link rel="stylesheet" href="<%= base %>/public/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="<%= base %>/">
+      <span class="logo-icon">🎵</span>
+      <span class="logo-text">MediaDock</span>
+    </a>
+    <nav>
+      <a href="<%= base %>/">Sammlung</a>
+      <a href="<%= base %>/items/add" class="btn btn-primary">+ Hinzufügen</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <a href="<%= base %>/" class="back-link">&larr; Zur Sammlung</a>
+
+    <div class="detail-layout">
+
+      <!-- ── Cover ──────────────────────────────────────────────────────── -->
+      <div class="detail-cover">
+        <% if (item.cover_url) { %>
+          <img src="<%= item.cover_url %>" alt="<%= item.title %>" />
+        <% } else { %>
+          <div class="cover-placeholder cover-placeholder--large">
+            <span><%= item.media_type.toUpperCase() %></span>
+          </div>
+        <% } %>
+        <div class="detail-badges">
+          <span class="badge badge-type"><%= item.media_type %></span>
+          <% if (item.owned)    { %><span class="badge badge-owned">✔ Besitze ich</span><% } %>
+          <% if (item.wishlist) { %><span class="badge badge-wish">♥ Wunschliste</span><% } %>
+        </div>
+      </div>
+
+      <!-- ── Info & edit form ────────────────────────────────────────────── -->
+      <div class="detail-info">
+        <h1 class="page-title"><%= item.title %></h1>
+        <% if (item.artist) { %><p class="detail-artist"><%= item.artist %></p><% } %>
+        <% if (item.year)   { %><p class="detail-year"><%= item.year %></p><% } %>
+        <% if (item.mbid)   { %>
+          <p class="detail-mbid">
+            <a href="https://musicbrainz.org/release/<%= item.mbid %>" target="_blank" rel="noopener">
+              MusicBrainz &rsaquo;
+            </a>
+          </p>
+        <% } %>
+
+        <form class="form-card" method="post" action="<%= base %>/items/<%= item.id %>">
+
+          <div class="form-group">
+            <label for="title">Titel</label>
+            <input id="title" name="title" type="text" value="<%= item.title %>" required />
+          </div>
+
+          <div class="form-group">
+            <label for="artist">Künstler</label>
+            <input id="artist" name="artist" type="text" value="<%= item.artist || '' %>" />
+          </div>
+
+          <div class="form-group form-group--half">
+            <div>
+              <label for="year">Jahr</label>
+              <input id="year" name="year" type="text" maxlength="4" value="<%= item.year || '' %>" />
+            </div>
+            <div>
+              <label for="media_type">Typ</label>
+              <select id="media_type" name="media_type">
+                <% for (const t of mediaTypes) { %>
+                  <option value="<%= t %>" <%= item.media_type === t ? 'selected' : '' %>><%= t.charAt(0).toUpperCase() + t.slice(1) %></option>
+                <% } %>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group form-group--inline">
+            <label class="checkbox-label">
+              <input type="checkbox" name="owned"    <%= item.owned    ? 'checked' : '' %> />
+              Besitze ich
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="wishlist" <%= item.wishlist ? 'checked' : '' %> />
+              Wunschliste
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label for="notes">Notizen</label>
+            <textarea id="notes" name="notes" rows="4" placeholder="Eigene Notizen…"><%= item.notes || '' %></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Speichern</button>
+          </div>
+        </form>
+
+        <!-- ── Delete ───────────────────────────────────────────────────── -->
+        <form
+          method="post"
+          action="<%= base %>/items/<%= item.id %>/delete"
+          class="delete-form"
+          onsubmit="return confirm('Diesen Eintrag wirklich löschen?')"
+        >
+          <button type="submit" class="btn btn-danger">Löschen</button>
+        </form>
+
+        <p class="detail-created">
+          Hinzugefügt: <%= new Date(item.created_at).toLocaleDateString('de-DE') %>
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <small>MediaDock &mdash; persönliche Mediensammlung</small>
+  </footer>
+</body>
+</html>
