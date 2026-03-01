@@ -26,7 +26,7 @@ router.get('/add', (req, res) => {
 
 router.post('/add', async (req, res, next) => {
   try {
-    const { title, artist, media_type, owned, wishlist } = req.body;
+    const { title, artist, media_type, owned, wishlist, rating, cover_url, mbid, year } = req.body;
 
     if (!title || !title.trim()) {
       return res.render('add', {
@@ -35,36 +35,41 @@ router.post('/add', async (req, res, next) => {
       });
     }
 
-    // Build a MusicBrainz search query from title + optional artist
-    const query = artist ? `${title} ${artist}` : title;
-    let mbData = null;
+    // Wenn mbid bereits bekannt (aus der Suchauswahl), direkt speichern –
+    // keine zweite MusicBrainz-Anfrage nötig.
+    let finalTitle  = title.trim();
+    let finalArtist = (artist || '').trim();
+    let finalYear   = (year   || '').trim();
+    let finalCover  = cover_url || '';
+    let finalMbid   = mbid || '';
 
-    try {
-      mbData = await searchMusicBrainz(query);
-    } catch (mbErr) {
-      // API unreachable – fall back to manual entry
-      console.warn('MusicBrainz-Suche fehlgeschlagen:', mbErr.message);
-    }
-
-    let coverUrl = '';
-    if (mbData?.mbid) {
+    if (!finalMbid) {
+      // Manueller Tab: MusicBrainz-Suche als Fallback
       try {
-        coverUrl = await fetchCoverUrl(mbData.mbid);
-      } catch (caErr) {
-        console.warn('Cover Art Archive nicht erreichbar:', caErr.message);
+        const mbData = await searchMusicBrainz(finalTitle, finalArtist);
+        if (mbData) {
+          finalTitle  = mbData.title  || finalTitle;
+          finalArtist = mbData.artist || finalArtist;
+          finalYear   = mbData.year   || finalYear;
+          finalMbid   = mbData.mbid   || '';
+          finalCover  = fetchCoverUrl(finalMbid);
+        }
+      } catch (mbErr) {
+        console.warn('MusicBrainz-Suche fehlgeschlagen:', mbErr.message);
       }
     }
 
     const item = db.createItem({
-      title: mbData?.title || title.trim(),
-      artist: mbData?.artist || (artist || '').trim(),
-      year: mbData?.year || '',
+      title:      finalTitle,
+      artist:     finalArtist,
+      year:       finalYear,
       media_type: media_type || 'vinyl',
-      owned: owned === 'on' ? 1 : 0,
-      wishlist: wishlist === 'on' ? 1 : 0,
-      notes: '',
-      cover_url: coverUrl,
-      mbid: mbData?.mbid || '',
+      owned:      owned    === 'on' ? 1 : 0,
+      wishlist:   wishlist  === 'on' ? 1 : 0,
+      rating:     Number(rating) || 0,
+      notes:      '',
+      cover_url:  finalCover,
+      mbid:       finalMbid,
     });
 
     res.redirect(`${res.app.locals.base}/items/${item.id}`);
@@ -90,12 +95,13 @@ router.get('/:id', (req, res, next) => {
 router.post('/:id', (req, res, next) => {
   try {
     const id = Number(req.params.id);
-    const { notes, owned, wishlist, title, artist, year, media_type } = req.body;
+    const { notes, owned, wishlist, title, artist, year, media_type, rating } = req.body;
 
     db.updateItem(id, {
       notes: notes ?? '',
       owned: owned === 'on' ? 1 : 0,
       wishlist: wishlist === 'on' ? 1 : 0,
+      rating: Number(rating) || 0,
       title: title?.trim() || undefined,
       artist: artist?.trim() || undefined,
       year: year?.trim() || undefined,

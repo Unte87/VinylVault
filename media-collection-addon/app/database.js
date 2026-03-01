@@ -30,14 +30,18 @@ function init() {
       artist      TEXT,
       year        TEXT,
       media_type  TEXT    NOT NULL DEFAULT 'vinyl',
-      owned       INTEGER NOT NULL DEFAULT 0,  -- 0 = false, 1 = true
+      owned       INTEGER NOT NULL DEFAULT 0,
       wishlist    INTEGER NOT NULL DEFAULT 0,
+      rating      INTEGER NOT NULL DEFAULT 0,  -- 0 = unbewertet, 1-5 Sterne
       notes       TEXT,
       cover_url   TEXT,
-      mbid        TEXT,                        -- MusicBrainz release ID
+      mbid        TEXT,
       created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
     );
   `);
+
+  // Migration: rating-Feld für bestehende Datenbanken hinzufügen
+  try { db.exec('ALTER TABLE items ADD COLUMN rating INTEGER NOT NULL DEFAULT 0'); } catch (_) { /* bereits vorhanden */ }
 
   console.log(`Datenbank initialisiert: ${DB_PATH}`);
 }
@@ -87,8 +91,8 @@ function getItemById(id) {
  */
 function createItem(data) {
   const stmt = db.prepare(`
-    INSERT INTO items (title, artist, year, media_type, owned, wishlist, notes, cover_url, mbid)
-    VALUES (@title, @artist, @year, @media_type, @owned, @wishlist, @notes, @cover_url, @mbid)
+    INSERT INTO items (title, artist, year, media_type, owned, wishlist, rating, notes, cover_url, mbid)
+    VALUES (@title, @artist, @year, @media_type, @owned, @wishlist, @rating, @notes, @cover_url, @mbid)
   `);
 
   const result = stmt.run({
@@ -98,6 +102,7 @@ function createItem(data) {
     media_type: data.media_type || 'vinyl',
     owned: data.owned ? 1 : 0,
     wishlist: data.wishlist ? 1 : 0,
+    rating: Number(data.rating) || 0,
     notes: data.notes || '',
     cover_url: data.cover_url || '',
     mbid: data.mbid || '',
@@ -112,7 +117,7 @@ function createItem(data) {
  * @param {object} data
  */
 function updateItem(id, data) {
-  const allowed = ['title', 'artist', 'year', 'media_type', 'owned', 'wishlist', 'notes', 'cover_url', 'mbid'];
+  const allowed = ['title', 'artist', 'year', 'media_type', 'owned', 'wishlist', 'rating', 'notes', 'cover_url', 'mbid'];
   const fields = Object.keys(data).filter((k) => allowed.includes(k));
 
   if (fields.length === 0) return getItemById(id);

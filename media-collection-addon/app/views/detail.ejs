@@ -98,6 +98,16 @@
           </div>
 
           <div class="form-group">
+            <label>Bewertung</label>
+            <div class="star-input" data-field="rating">
+              <% for (let i = 1; i <= 5; i++) { %>
+                <span class="star <%= item.rating >= i ? 'active' : '' %>" data-value="<%= i %>">&#9733;</span>
+              <% } %>
+            </div>
+            <input type="hidden" name="rating" id="rating" value="<%= item.rating || 0 %>" />
+          </div>
+
+          <div class="form-group">
             <label for="notes">Notizen</label>
             <textarea id="notes" name="notes" rows="4" placeholder="Eigene Notizen…"><%= item.notes || '' %></textarea>
           </div>
@@ -127,5 +137,23 @@
   <footer class="site-footer">
     <small>MediaDock &mdash; persönliche Mediensammlung</small>
   </footer>
-</body>
+  <script>
+    // Sterne-Rating Widget
+    document.querySelectorAll('.star-input').forEach(widget => {
+      const field = document.getElementById(widget.dataset.field);
+      const stars = widget.querySelectorAll('.star');
+      stars.forEach((star, idx) => {
+        star.addEventListener('click', () => {
+          const val = idx + 1;
+          field.value = (Number(field.value) === val) ? 0 : val;
+          updateStars(widget, Number(field.value));
+        });
+        star.addEventListener('mouseenter', () => updateStars(widget, idx + 1));
+      });
+      widget.addEventListener('mouseleave', () => updateStars(widget, Number(field.value)));
+    });
+    function updateStars(widget, val) {
+      widget.querySelectorAll('.star').forEach((s, i) => s.classList.toggle('active', i < val));
+    }
+  </script></body>
 </html>

@@ -380,3 +380,156 @@ img { max-width: 100%; display: block; }
 ::-webkit-scrollbar { width: 7px; height: 7px; }
 ::-webkit-scrollbar-track { background: var(--color-surface); }
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
+
+/* ── Tabs ────────────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--color-muted);
+  padding: .55rem 1rem;
+  font-size: .88rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: color var(--transition), border-color var(--transition);
+}
+.tab-btn:hover  { color: var(--color-text); }
+.tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+
+.tab-panel        { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Search bar ──────────────────────────────────────────────────────────────── */
+.search-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin-bottom: 1.1rem;
+}
+.search-bar input {
+  flex: 1;
+  min-width: 160px;
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: .55rem .75rem;
+  font-size: .9rem;
+}
+.search-bar input:focus { outline: none; border-color: var(--color-primary); }
+
+/* ── Search result grid ──────────────────────────────────────────────────────── */
+.search-results { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1.5rem; }
+
+.result-card {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: .6rem .75rem;
+  cursor: pointer;
+  transition: border-color var(--transition), transform var(--transition);
+}
+.result-card:hover { border-color: var(--color-primary); transform: translateX(3px); }
+
+.result-cover {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--color-surface-2);
+}
+.result-cover img   { width: 100%; height: 100%; object-fit: cover; }
+
+.result-info        { flex: 1; min-width: 0; }
+.result-title       { font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.result-artist      { font-size: .78rem; color: var(--color-muted); }
+.result-year        { font-size: .72rem; color: var(--color-muted); }
+.result-add-icon    { font-size: 1.3rem; color: var(--color-primary); flex-shrink: 0; }
+
+.search-loading, .search-empty, .search-error {
+  padding: 1rem;
+  color: var(--color-muted);
+  font-size: .875rem;
+  text-align: center;
+}
+.search-error { color: var(--color-danger); }
+
+/* ── Artist cards ────────────────────────────────────────────────────────────── */
+.artist-card {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: .65rem 1rem;
+  cursor: pointer;
+  transition: border-color var(--transition);
+}
+.artist-card:hover  { border-color: var(--color-primary); }
+.artist-name        { font-weight: 600; font-size: .9rem; flex: 1; }
+.artist-dis         { font-size: .78rem; color: var(--color-muted); }
+.artist-country     { font-size: .72rem; color: var(--color-muted); margin-left: auto; }
+
+.disc-heading {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: .5rem 0 .75rem;
+  color: var(--color-muted);
+}
+
+/* ── Confirm panel ───────────────────────────────────────────────────────────── */
+.confirm-panel {
+  margin-top: 2rem;
+  border-top: 2px solid var(--color-primary);
+  padding-top: 1.5rem;
+}
+.confirm-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+.confirm-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.confirm-preview img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.confirm-item-title  { font-weight: 700; font-size: 1rem; }
+.confirm-item-artist { color: var(--color-muted); font-size: .875rem; }
+.confirm-item-year   { color: var(--color-muted); font-size: .78rem; }
+
+/* ── Star rating ─────────────────────────────────────────────────────────────── */
+.star-input  { display: flex; gap: .2rem; cursor: pointer; margin: .2rem 0; }
+.star-input .star {
+  font-size: 1.5rem;
+  color: var(--color-border);
+  transition: color var(--transition), transform var(--transition);
+  user-select: none;
+}
+.star-input .star.active { color: #f5c518; }
+.star-input .star:hover  { transform: scale(1.2); }
+
+/* Stars display-only (index card) */
+.card-stars     { display: flex; gap: .1rem; }
+.star-on        { color: #f5c518; font-size: .7rem; }
+.star-off       { color: var(--color-border); font-size: .7rem; }

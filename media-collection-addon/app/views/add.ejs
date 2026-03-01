@@ -1,10 +1,286 @@
 <%
   /*
    * views/add.ejs
-   * Form to add a new media item.
-   * After the user submits, the server-side searches MusicBrainz and stores results.
+   * Zwei-Tab-Formular zum Hinzufügen eines neuen Mediums:
+   *   Tab 1: Release direkt suchen (Titel + Künstler → Treffer)
+   *   Tab 2: Künstler suchen → Diskografie → Auswählen
+   * Wenn ein Ergebnis ausgewählt wird, füllt JS das finale Formular aus.
    */
 %>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hinzufügen – MediaDock</title>
+  <link rel="stylesheet" href="<%= base %>/public/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="<%= base %>/">
+      <span class="logo-icon">🎵</span>
+      <span class="logo-text">MediaDock</span>
+    </a>
+    <nav>
+      <a href="<%= base %>/">Sammlung</a>
+      <a href="<%= base %>/items/add" class="btn btn-primary">+ Hinzufügen</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1 class="page-title">Neues Medium hinzufügen</h1>
+
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <!-- ── Tabs ──────────────────────────────────────────────────────────── -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="release">🔍 Release suchen</button>
+      <button class="tab-btn"        data-tab="artist"> 🎤 Künstler suchen</button>
+      <button class="tab-btn"        data-tab="manual"> ✏️ Manuell</button>
+    </div>
+
+    <!-- ── Tab: Release-Suche ─────────────────────────────────────────────── -->
+    <div id="tab-release" class="tab-panel active">
+      <div class="search-bar">
+        <input id="rel-title"  type="text" placeholder="Titel  (z. B. Greatest Hits)" />
+        <input id="rel-artist" type="text" placeholder="Künstler  (z. B. Foo Fighters)" />
+        <button id="rel-search-btn" class="btn btn-primary">Suchen</button>
+      </div>
+      <div id="rel-results" class="search-results"></div>
+    </div>
+
+    <!-- ── Tab: Künstler-Suche ─────────────────────────────────────────────── -->
+    <div id="tab-artist" class="tab-panel">
+      <div class="search-bar">
+        <input id="art-query" type="text" placeholder="Künstlername  (z. B. Foo Fighters)" />
+        <button id="art-search-btn" class="btn btn-primary">Suchen</button>
+      </div>
+      <div id="art-results"  class="search-results"></div>
+      <div id="disc-results" class="search-results" style="display:none"></div>
+    </div>
+
+    <!-- ── Tab: Manuell ───────────────────────────────────────────────────── -->
+    <div id="tab-manual" class="tab-panel">
+      <form class="form-card" method="post" action="<%= base %>/items/add">
+        <div class="form-group">
+          <label for="m-title">Titel <span class="required">*</span></label>
+          <input id="m-title" name="title" type="text" required placeholder="Titel eingeben" autofocus />
+        </div>
+        <div class="form-group">
+          <label for="m-artist">Künstler</label>
+          <input id="m-artist" name="artist" type="text" placeholder="Künstler / Interpret" />
+        </div>
+        <div class="form-group">
+          <label for="m-type">Medientyp</label>
+          <select id="m-type" name="media_type">
+            <% for (const t of mediaTypes) { %>
+              <option value="<%= t %>"><%= t.charAt(0).toUpperCase() + t.slice(1) %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="form-group form-group--inline">
+          <label class="checkbox-label"><input type="checkbox" name="owned"    /> Besitze ich</label>
+          <label class="checkbox-label"><input type="checkbox" name="wishlist" /> Wunschliste</label>
+        </div>
+        <div class="form-actions">
+          <a href="<%= base %>/" class="btn btn-ghost">Abbrechen</a>
+          <button type="submit" class="btn btn-primary">Speichern</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ── Bestätigungsformular (wird per JS ausgefüllt) ─────────────────── -->
+    <div id="confirm-panel" class="confirm-panel" style="display:none">
+      <h2 class="confirm-title">Ausgewählt</h2>
+      <div class="confirm-preview">
+        <img id="confirm-cover" src="" alt="" />
+        <div>
+          <p id="confirm-label-title"  class="confirm-item-title"></p>
+          <p id="confirm-label-artist" class="confirm-item-artist"></p>
+          <p id="confirm-label-year"   class="confirm-item-year"></p>
+        </div>
+      </div>
+      <form class="form-card" method="post" action="<%= base %>/items/add">
+        <input type="hidden" name="title"     id="cf-title"     />
+        <input type="hidden" name="artist"    id="cf-artist"    />
+        <input type="hidden" name="year"      id="cf-year"      />
+        <input type="hidden" name="cover_url" id="cf-cover_url" />
+        <input type="hidden" name="mbid"      id="cf-mbid"      />
+
+        <div class="form-group">
+          <label for="cf-type">Medientyp</label>
+          <select id="cf-type" name="media_type">
+            <% for (const t of mediaTypes) { %>
+              <option value="<%= t %>"><%= t.charAt(0).toUpperCase() + t.slice(1) %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="form-group form-group--inline">
+          <label class="checkbox-label"><input type="checkbox" name="owned"    /> Besitze ich</label>
+          <label class="checkbox-label"><input type="checkbox" name="wishlist" /> Wunschliste</label>
+        </div>
+        <div class="form-group">
+          <label>Bewertung</label>
+          <div class="star-input" id="cf-star-input" data-field="cf-rating">
+            <% for (let i = 1; i <= 5; i++) { %>
+              <span class="star" data-value="<%= i %>">★</span>
+            <% } %>
+          </div>
+          <input type="hidden" name="rating" id="cf-rating" value="0" />
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" onclick="closeConfirm()">Abbrechen</button>
+          <button type="submit" class="btn btn-primary">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <small>MediaDock &mdash; persönliche Mediensammlung</small>
+  </footer>
+
+  <script>
+    const BASE = '<%= base %>';
+
+    // ── Tabs ────────────────────────────────────────────────────────────────
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ── Hilfsfunktionen ─────────────────────────────────────────────────────
+    function coverImg(url, title) {
+      if (!url) return `<div class="cover-placeholder"><span>?</span></div>`;
+      return `<img src="${url}" alt="${escHtml(title)}" loading="lazy"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+              /><div class="cover-placeholder" style="display:none"><span>?</span></div>`;
+    }
+    function escHtml(s) {
+      return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function setLoading(el) { el.innerHTML = '<p class="search-loading">Suche läuft…</p>'; }
+    function setError(el, msg) { el.innerHTML = `<p class="search-error">${msg}</p>`; }
+
+    // ── Ausgewähltes Release ins Bestätigungsformular übertragen ───────────
+    function selectRelease(r) {
+      document.getElementById('cf-title').value     = r.title     || '';
+      document.getElementById('cf-artist').value    = r.artist    || '';
+      document.getElementById('cf-year').value      = r.year      || '';
+      document.getElementById('cf-cover_url').value = r.cover_url || '';
+      document.getElementById('cf-mbid').value      = r.mbid      || '';
+
+      document.getElementById('confirm-label-title').textContent  = r.title  || '';
+      document.getElementById('confirm-label-artist').textContent = r.artist || '';
+      document.getElementById('confirm-label-year').textContent   = r.year   || '';
+
+      const img = document.getElementById('confirm-cover');
+      if (r.cover_url) { img.src = r.cover_url; img.style.display = ''; }
+      else              { img.style.display = 'none'; }
+
+      document.getElementById('confirm-panel').style.display = '';
+      document.getElementById('confirm-panel').scrollIntoView({ behavior: 'smooth' });
+    }
+    function closeConfirm() {
+      document.getElementById('confirm-panel').style.display = 'none';
+    }
+
+    // ── Release-Karte als HTML ───────────────────────────────────────────────
+    function releaseCard(r) {
+      return `
+        <div class="result-card" onclick='selectRelease(${JSON.stringify(r)})'>
+          <div class="result-cover">${coverImg(r.cover_url, r.title)}</div>
+          <div class="result-info">
+            <p class="result-title">${escHtml(r.title)}</p>
+            <p class="result-artist">${escHtml(r.artist)}</p>
+            <p class="result-year">${escHtml(r.year)}${r.type ? ' · '+escHtml(r.type) : ''}</p>
+          </div>
+          <span class="result-add-icon">＋</span>
+        </div>`;
+    }
+
+    // ── Tab 1: Release suchen ────────────────────────────────────────────────
+    async function searchReleases() {
+      const title  = document.getElementById('rel-title').value.trim();
+      const artist = document.getElementById('rel-artist').value.trim();
+      if (!title) return;
+      const el = document.getElementById('rel-results');
+      setLoading(el);
+      try {
+        const params = new URLSearchParams({ q: title });
+        if (artist) params.set('artist', artist);
+        const res  = await fetch(`${BASE}/api/search?${params}`);
+        const data = await res.json();
+        if (!data.length) { el.innerHTML = '<p class="search-empty">Keine Treffer gefunden.</p>'; return; }
+        el.innerHTML = data.map(releaseCard).join('');
+      } catch { setError(el, 'Suche fehlgeschlagen.'); }
+    }
+    document.getElementById('rel-search-btn').addEventListener('click', searchReleases);
+    document.getElementById('rel-title').addEventListener('keydown',  e => e.key==='Enter' && searchReleases());
+    document.getElementById('rel-artist').addEventListener('keydown', e => e.key==='Enter' && searchReleases());
+
+    // ── Tab 2: Künstler suchen ───────────────────────────────────────────────
+    async function searchArtists() {
+      const q = document.getElementById('art-query').value.trim();
+      if (!q) return;
+      const el = document.getElementById('art-results');
+      document.getElementById('disc-results').style.display = 'none';
+      setLoading(el);
+      try {
+        const res  = await fetch(`${BASE}/api/artists?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        if (!data.length) { el.innerHTML = '<p class="search-empty">Keine Künstler gefunden.</p>'; return; }
+        el.innerHTML = data.map(a => `
+          <div class="artist-card" onclick="loadDiscography('${a.mbid}','${escHtml(a.name)}')">
+            <span class="artist-name">${escHtml(a.name)}</span>
+            ${a.disambiguation ? `<span class="artist-dis">${escHtml(a.disambiguation)}</span>` : ''}
+            ${a.country         ? `<span class="artist-country">${escHtml(a.country)}</span>` : ''}
+          </div>`).join('');
+      } catch { setError(el, 'Suche fehlgeschlagen.'); }
+    }
+    document.getElementById('art-search-btn').addEventListener('click', searchArtists);
+    document.getElementById('art-query').addEventListener('keydown', e => e.key==='Enter' && searchArtists());
+
+    // ── Diskografie laden ────────────────────────────────────────────────────
+    async function loadDiscography(mbid, name) {
+      const el = document.getElementById('disc-results');
+      el.style.display = '';
+      el.innerHTML = `<p class="search-loading">Lade Diskografie von ${escHtml(name)}…</p>`;
+      el.scrollIntoView({ behavior: 'smooth' });
+      try {
+        const res  = await fetch(`${BASE}/api/artists/${mbid}/releases`);
+        const data = await res.json();
+        if (!data.length) { el.innerHTML = '<p class="search-empty">Keine Releases gefunden.</p>'; return; }
+        el.innerHTML = `<h3 class="disc-heading">Diskografie: ${escHtml(name)}</h3>` + data.map(releaseCard).join('');
+      } catch { setError(el, 'Diskografie konnte nicht geladen werden.'); }
+    }
+
+    // ── Sterne-Rating ────────────────────────────────────────────────────────
+    document.querySelectorAll('.star-input').forEach(widget => {
+      const field = document.getElementById(widget.dataset.field);
+      const stars = widget.querySelectorAll('.star');
+      stars.forEach((star, idx) => {
+        star.addEventListener('click', () => {
+          const val = idx + 1;
+          field.value = (Number(field.value) === val) ? 0 : val; // zweiter Klick = zurücksetzen
+          updateStars(widget, Number(field.value));
+        });
+        star.addEventListener('mouseenter', () => updateStars(widget, idx + 1));
+      });
+      widget.addEventListener('mouseleave', () => updateStars(widget, Number(field.value)));
+    });
+    function updateStars(widget, val) {
+      widget.querySelectorAll('.star').forEach((s, i) => s.classList.toggle('active', i < val));
+    }
+  </script>
+</body>
+</html>
 <!DOCTYPE html>
 <html lang="de">
 <head>

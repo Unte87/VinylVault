@@ -3,107 +3,140 @@
 /**
  * musicbrainz.js
  *
- * Helper functions for the MusicBrainz and Cover Art Archive APIs.
+ * MusicBrainz-API und Cover Art Archive Hilfsfunktionen.
  *
- * MusicBrainz API:
- *   https://musicbrainz.org/ws/2/release/?query=<query>&fmt=json
- *   Rate-limit: 1 request/second for anonymous clients.
- *   Requires a descriptive User-Agent: <app-name>/<version> (<contact>)
+ * Endpunkte:
+ *   Release-Suche:  https://musicbrainz.org/ws/2/release/?query=…&fmt=json
+ *   Künstler-Suche: https://musicbrainz.org/ws/2/artist/?query=…&fmt=json
+ *   Release-Groups: https://musicbrainz.org/ws/2/release-group/?artist=<mbid>&fmt=json
+ *   Cover:          https://coverartarchive.org/release/<mbid>/front-250
+ *   Cover (RG):     https://coverartarchive.org/release-group/<mbid>/front-250
  *
- * Cover Art Archive API:
- *   https://coverartarchive.org/release/<mbid>/front-250
- *   Returns a redirect (302) to the actual image; Axios follows it automatically.
+ * Rate-Limit: max. 1 Anfrage/Sekunde. User-Agent ist Pflicht.
  */
 
 const axios = require('axios');
 
-// User-Agent required by MusicBrainz's guidelines
-const USER_AGENT = 'MediaDock/1.0.0 (home-assistant-addon)';
+const USER_AGENT = 'MediaDock/1.0.1 (home-assistant-addon)';
 
-// Shared Axios instance with sane defaults
 const http = axios.create({
   timeout: 10_000,
   headers: { 'User-Agent': USER_AGENT },
 });
 
+// ── Release-Suche ─────────────────────────────────────────────────────────────
+
 /**
- * Search MusicBrainz for releases matching `query`.
- * Returns the first result mapped to our internal shape, or null.
- *
- * @param {string} query  Free-text search string (e.g. "Dark Side of the Moon Pink Floyd")
- * @returns {Promise<{title:string, artist:string, year:string, mbid:string}|null>}
+ * Gibt das erste MusicBrainz-Suchergebnis zurück.
+ * Wenn `artist` angegeben ist, verwendet die Suche Lucene-Feldsyntax:
+ *   release:"Greatest Hits" AND artist:"Foo Fighters"
+ * Das liefert erheblich präzisere Treffer als eine Freitextsuche.
  */
-async function searchMusicBrainz(query) {
-  const results = await searchMusicBrainzMultiple(query, 1);
+async function searchMusicBrainz(title, artist = '') {
+  const results = await searchMusicBrainzMultiple(title, 1, artist);
   return results.length > 0 ? results[0] : null;
 }
 
 /**
- * Search MusicBrainz and return up to `limit` results.
- *
- * @param {string} query
- * @param {number} limit
- * @returns {Promise<Array<{title:string, artist:string, year:string, mbid:string}>>}
+ * Sucht nach Releases und gibt bis zu `limit` Ergebnisse zurück.
  */
-async function searchMusicBrainzMultiple(query, limit = 5) {
-  const url = 'https://musicbrainz.org/ws/2/release/';
+async function searchMusicBrainzMultiple(title, limit = 5, artist = '') {
+  const query = artist
+    ? `release:"${title}" AND artist:"${artist}"`
+    : `release:"${title}"`;
 
-  const { data } = await http.get(url, {
-    params: {
-      query: query,
-      fmt: 'json',
-      limit,
-    },
+  const { data } = await http.get('https://musicbrainz.org/ws/2/release/', {
+    params: { query, fmt: 'json', limit },
   });
 
-  const releases = data.releases || [];
-
-  return releases.map((release) => {
-    // Extract the primary artist from the artist-credit array
-    const artist = (release['artist-credit'] || [])
-      .map((ac) => (typeof ac === 'string' ? ac : ac.artist?.name || ac.name || ''))
-      .join('')
-      .trim();
-
-    // Release year is in 'date' field, e.g. "1973-03-01" → "1973"
-    const year = (release.date || '').slice(0, 4);
-
-    return {
-      title: release.title || '',
-      artist,
-      year,
-      mbid: release.id || '',
-    };
-  });
+  return (data.releases || []).map(mapRelease);
 }
+
+function mapRelease(release) {
+  const artist = (release['artist-credit'] || [])
+    .map((ac) => (typeof ac === 'string' ? ac : ac.artist?.name || ac.name || ''))
+    .join('').trim();
+  return {
+    title: release.title || '',
+    artist,
+    year: (release.date || '').slice(0, 4),
+    mbid: release.id || '',
+  };
+}
+
+// ── Künstler-Suche ────────────────────────────────────────────────────────────
 
 /**
- * Try to fetch the front-cover image URL for a MusicBrainz release.
- *
- * The Cover Art Archive redirects 307 to the actual image URL.
- * We ask Axios to follow up to 5 redirects and then return the
- * final URL so we can store it (avoiding repeated redirect hops at render time).
- *
- * @param {string} mbid  MusicBrainz release ID
- * @returns {Promise<string>}  The resolved image URL, or empty string if none.
+ * Sucht Künstler bei MusicBrainz.
+ * @returns {Promise<Array<{name, mbid, country, disambiguation}>>}
  */
-async function fetchCoverUrl(mbid) {
-  if (!mbid) return '';
-
-  const url = `https://coverartarchive.org/release/${mbid}/front-250`;
-
-  // HEAD request is enough – we only want the final URL after redirects
-  const response = await http.get(url, {
-    maxRedirects: 5,
-    responseType: 'arraybuffer', // prevent large response body loading into memory
-    validateStatus: (s) => s < 400,
+async function searchArtists(query, limit = 8) {
+  const { data } = await http.get('https://musicbrainz.org/ws/2/artist/', {
+    params: { query, fmt: 'json', limit },
   });
 
-  // After Axios resolves all redirects, response.request.res.responseUrl
-  // (Node http) or response.config.url contains the final URL.
-  // The safest cross-platform way is to return the original CAA URL as the
-  // browser will follow the redirect itself at display time.
-  return url;
+  return (data.artists || []).map((a) => ({
+    name: a.name || '',
+    mbid: a.id || '',
+    country: a.country || '',
+    disambiguation: a.disambiguation || '',
+  }));
 }
 
-module.exports = { searchMusicBrainz, searchMusicBrainzMultiple, fetchCoverUrl };
+// ── Diskografie eines Künstlers ───────────────────────────────────────────────
+
+/**
+ * Gibt die Release-Groups eines Künstlers zurück.
+ * Release-Groups vermeiden Duplikate durch mehrere Editionen.
+ * @returns {Promise<Array<{title, artist, year, mbid, type, cover_url}>>}
+ */
+async function getReleaseGroupsByArtist(artistMbid, limit = 50) {
+  const { data } = await http.get('https://musicbrainz.org/ws/2/release-group/', {
+    params: { artist: artistMbid, fmt: 'json', limit, inc: 'artist-credits' },
+  });
+
+  const groups = (data['release-groups'] || []).map((rg) => {
+    const artist = (rg['artist-credit'] || [])
+      .map((ac) => (typeof ac === 'string' ? ac : ac.artist?.name || ''))
+      .join('').trim();
+    return {
+      title: rg.title || '',
+      artist,
+      year: (rg['first-release-date'] || '').slice(0, 4),
+      mbid: rg.id || '',
+      type: rg['primary-type'] || 'Album',
+      cover_url: `https://coverartarchive.org/release-group/${rg.id}/front-250`,
+    };
+  });
+
+  const order = ['Album', 'EP', 'Single', 'Other'];
+  return groups.sort((a, b) => {
+    const ta = order.indexOf(a.type);
+    const tb = order.indexOf(b.type);
+    if (ta !== tb) return (ta === -1 ? 99 : ta) - (tb === -1 ? 99 : tb);
+    return (b.year || '0').localeCompare(a.year || '0');
+  });
+}
+
+// ── Cover Art Archive ─────────────────────────────────────────────────────────
+
+/** Cover-URL für eine Release-MBID (der Browser folgt dem Redirect selbst). */
+function fetchCoverUrl(mbid) {
+  if (!mbid) return '';
+  return `https://coverartarchive.org/release/${mbid}/front-250`;
+}
+
+/** Cover-URL für eine Release-Group-MBID. */
+function fetchReleaseGroupCoverUrl(rgMbid) {
+  if (!rgMbid) return '';
+  return `https://coverartarchive.org/release-group/${rgMbid}/front-250`;
+}
+
+module.exports = {
+  searchMusicBrainz,
+  searchMusicBrainzMultiple,
+  searchArtists,
+  getReleaseGroupsByArtist,
+  fetchCoverUrl,
+  fetchReleaseGroupCoverUrl,
+};
