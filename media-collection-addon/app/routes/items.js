@@ -16,7 +16,7 @@ const router = express.Router();
 const db = require('../database');
 const { searchMusicBrainz, fetchCoverUrl } = require('../musicbrainz');
 
-const MEDIA_TYPES = ['vinyl', 'cd', 'game', 'bluray', 'dvd', 'book', 'other'];
+const MEDIA_TYPES = ['vinyl'];
 
 // ── Add item ──────────────────────────────────────────────────────────────────
 
@@ -122,6 +122,36 @@ router.post('/:id/delete', (req, res, next) => {
     res.redirect(`${res.app.locals.base}/`);
   } catch (err) {
     next(err);
+  }
+});
+
+// ── Metadaten nachladen ───────────────────────────────────────────────────────
+// Ruft MusicBrainz mit Titel + Künstler des Eintrags auf und aktualisiert
+// Cover, MBID und Jahr. Nützlich für CSV-Imports ohne Live-Metadaten.
+
+router.post('/:id/refresh', async (req, res, next) => {
+  try {
+    const id   = Number(req.params.id);
+    const item = db.getItemById(id);
+    if (!item) return res.status(404).render('error', { message: 'Item nicht gefunden.', base: res.app.locals.base });
+
+    const mbData = await searchMusicBrainz(item.title, item.artist || '');
+
+    if (mbData) {
+      db.updateItem(id, {
+        title:     mbData.title  || item.title,
+        artist:    mbData.artist || item.artist,
+        year:      mbData.year   || item.year,
+        cover_url: fetchCoverUrl(mbData.mbid),
+        mbid:      mbData.mbid,
+      });
+    }
+
+    res.redirect(`${res.app.locals.base}/items/${id}`);
+  } catch (err) {
+    // Bei API-Fehler trotzdem zurück zur Detailseite
+    console.error('Metadaten-Refresh fehlgeschlagen:', err.message);
+    res.redirect(`${res.app.locals.base}/items/${req.params.id}`);
   }
 });
 

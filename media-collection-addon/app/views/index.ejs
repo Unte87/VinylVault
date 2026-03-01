@@ -21,6 +21,7 @@
     </a>
     <nav>
       <a href="<%= base %>/">Sammlung</a>
+      <a href="<%= base %>/csv">CSV-Import</a>
       <a href="<%= base %>/items/add" class="btn btn-primary">+ Hinzufügen</a>
     </nav>
   </header>
@@ -31,16 +32,6 @@
     <!-- ── Filter bar ──────────────────────────────────────────────────── -->
     <form class="filter-bar" method="get" action="<%= base %>/">
       <div class="filter-group">
-        <label for="type">Typ</label>
-        <select id="type" name="type" onchange="this.form.submit()">
-          <option value="all" <%= selectedType === 'all' ? 'selected' : '' %>>Alle</option>
-          <% for (const t of mediaTypes) { %>
-            <option value="<%= t %>" <%= selectedType === t ? 'selected' : '' %>><%= t.charAt(0).toUpperCase() + t.slice(1) %></option>
-          <% } %>
-        </select>
-      </div>
-
-      <div class="filter-group">
         <label for="status">Status</label>
         <select id="status" name="status" onchange="this.form.submit()">
           <option value="all"      <%= selectedStatus === 'all'      ? 'selected' : '' %>>Alle</option>
@@ -49,7 +40,7 @@
         </select>
       </div>
 
-      <span class="filter-count"><%= items.length %> Einträge</span>
+      <span class="filter-count"><%= items.length %> Platten</span>
     </form>
 
     <!-- ── Item grid ───────────────────────────────────────────────────── -->
@@ -66,14 +57,13 @@
                 <% if (item.cover_url) { %>
                   <img src="<%= item.cover_url %>" alt="<%= item.title %>" loading="lazy" />
                 <% } else { %>
-                  <div class="cover-placeholder"><span><%= item.media_type.toUpperCase() %></span></div>
+                  <div class="cover-placeholder"><span>🎵</span></div>
                 <% } %>
               </div>
               <div class="item-info">
                 <p class="item-title"><%= item.title %></p>
                 <% if (item.artist) { %><p class="item-artist"><%= item.artist %></p><% } %>
                 <p class="item-meta">
-                  <span class="badge badge-type"><%= item.media_type %></span>
                   <% if (item.year) { %><span class="item-year"><%= item.year %></span><% } %>
                   <% if (item.owned)    { %><span class="badge badge-owned">✔ Besitze ich</span><% } %>
                   <% if (item.wishlist) { %><span class="badge badge-wish">♥ Wunschliste</span><% } %>
@@ -85,6 +75,15 @@
                 </p>
               </div>
             </a>
+            <% if (item.wishlist) { %>
+              <a
+                class="gh-link"
+                href="https://www.greenhellrecords.de/?s=<%= encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.title) %>"
+                target="_blank"
+                rel="noopener"
+                title="Bei Green Hell Records suchen"
+              >Bei&nbsp;Green&nbsp;Hell&nbsp;suchen ↗</a>
+            <% } %>
           </li>
         <% } %>
       </ul>

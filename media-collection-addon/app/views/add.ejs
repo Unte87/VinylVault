@@ -23,6 +23,7 @@
     </a>
     <nav>
       <a href="<%= base %>/">Sammlung</a>
+      <a href="<%= base %>/csv">CSV-Import</a>
       <a href="<%= base %>/items/add" class="btn btn-primary">+ Hinzufügen</a>
     </nav>
   </header>
@@ -72,14 +73,7 @@
           <label for="m-artist">Künstler</label>
           <input id="m-artist" name="artist" type="text" placeholder="Künstler / Interpret" />
         </div>
-        <div class="form-group">
-          <label for="m-type">Medientyp</label>
-          <select id="m-type" name="media_type">
-            <% for (const t of mediaTypes) { %>
-              <option value="<%= t %>"><%= t.charAt(0).toUpperCase() + t.slice(1) %></option>
-            <% } %>
-          </select>
-        </div>
+        <input type="hidden" name="media_type" value="vinyl" />
         <div class="form-group form-group--inline">
           <label class="checkbox-label"><input type="checkbox" name="owned"    /> Besitze ich</label>
           <label class="checkbox-label"><input type="checkbox" name="wishlist" /> Wunschliste</label>
@@ -109,14 +103,7 @@
         <input type="hidden" name="cover_url" id="cf-cover_url" />
         <input type="hidden" name="mbid"      id="cf-mbid"      />
 
-        <div class="form-group">
-          <label for="cf-type">Medientyp</label>
-          <select id="cf-type" name="media_type">
-            <% for (const t of mediaTypes) { %>
-              <option value="<%= t %>"><%= t.charAt(0).toUpperCase() + t.slice(1) %></option>
-            <% } %>
-          </select>
-        </div>
+        <input type="hidden" name="media_type" value="vinyl" />
         <div class="form-group form-group--inline">
           <label class="checkbox-label"><input type="checkbox" name="owned"    /> Besitze ich</label>
           <label class="checkbox-label"><input type="checkbox" name="wishlist" /> Wunschliste</label>
@@ -279,94 +266,5 @@
       widget.querySelectorAll('.star').forEach((s, i) => s.classList.toggle('active', i < val));
     }
   </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hinzufügen – MediaDock</title>
-  <link rel="stylesheet" href="<%= base %>/public/style.css" />
-</head>
-<body>
-  <header class="site-header">
-    <a class="logo" href="<%= base %>/">
-      <span class="logo-icon">🎵</span>
-      <span class="logo-text">MediaDock</span>
-    </a>
-    <nav>
-      <a href="<%= base %>/">Sammlung</a>
-      <a href="<%= base %>/items/add" class="btn btn-primary">+ Hinzufügen</a>
-    </nav>
-  </header>
-
-  <main class="container">
-    <h1 class="page-title">Neues Medium hinzufügen</h1>
-
-    <% if (error) { %>
-      <div class="alert alert-error"><%= error %></div>
-    <% } %>
-
-    <form class="form-card" method="post" action="<%= base %>/items/add">
-
-      <div class="form-group">
-        <label for="title">Titel <span class="required">*</span></label>
-        <input
-          id="title"
-          name="title"
-          type="text"
-          required
-          placeholder="z. B. The Dark Side of the Moon"
-          autofocus
-        />
-        <small>Wird für die MusicBrainz-Suche verwendet.</small>
-      </div>
-
-      <div class="form-group">
-        <label for="artist">Künstler / Interpret</label>
-        <input
-          id="artist"
-          name="artist"
-          type="text"
-          placeholder="z. B. Pink Floyd"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="media_type">Medientyp</label>
-        <select id="media_type" name="media_type">
-          <% for (const t of mediaTypes) { %>
-            <option value="<%= t %>"><%= t.charAt(0).toUpperCase() + t.slice(1) %></option>
-          <% } %>
-        </select>
-      </div>
-
-      <div class="form-group form-group--inline">
-        <label class="checkbox-label">
-          <input type="checkbox" name="owned" />
-          Besitze ich bereits
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" name="wishlist" />
-          Wunschliste
-        </label>
-      </div>
-
-      <p class="form-hint">
-        Nach dem Speichern wird automatisch in MusicBrainz nach Metadaten und Cover
-        gesucht. Wenn nichts gefunden wird, werden deine Angaben direkt gespeichert.
-      </p>
-
-      <div class="form-actions">
-        <a href="<%= base %>/" class="btn btn-ghost">Abbrechen</a>
-        <button type="submit" class="btn btn-primary">Suchen &amp; Speichern</button>
-      </div>
-    </form>
-  </main>
-
-  <footer class="site-footer">
-    <small>MediaDock &mdash; persönliche Mediensammlung</small>
-  </footer>
 </body>
 </html>

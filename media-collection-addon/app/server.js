@@ -5,7 +5,8 @@ const morgan = require('morgan');
 const db = require('./database');
 const indexRouter = require('./routes/index');
 const itemsRouter = require('./routes/items');
-const apiRouter = require('./routes/api');
+const apiRouter   = require('./routes/api');
+const csvRouter   = require('./routes/csv');
 
 const app = express();
 const PORT = process.env.PORT || 8099;
@@ -34,6 +35,7 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/items', itemsRouter);
 app.use('/api', apiRouter);
+app.use('/csv', csvRouter);
 
 // Fallback 404
 app.use((req, res) => {

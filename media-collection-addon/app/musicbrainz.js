@@ -39,11 +39,22 @@ async function searchMusicBrainz(title, artist = '') {
 
 /**
  * Sucht nach Releases und gibt bis zu `limit` Ergebnisse zurück.
+ * Verwendet KEINE Anführungszeichen in der Lucene-Query, damit die Suche
+ * case-insensitiv und tolerant gegenüber Tippfehlern ist.
+ * "~" am Ende jedes Terms aktiviert Fuzzy-Matching (~0.8 Ähnlichkeit).
  */
 async function searchMusicBrainzMultiple(title, limit = 5, artist = '') {
-  const query = artist
-    ? `release:"${title}" AND artist:"${artist}"`
-    : `release:"${title}"`;
+  // Sonderzeichen escapen, Kleinschreibung erzwingen
+  const safeTitle  = title.toLowerCase().replace(/["\\+\-!(){}\[\]^~*?:|&]/g, ' ').trim();
+  const safeArtist = artist.toLowerCase().replace(/["\\+\-!(){}\[\]^~*?:|&]/g, ' ').trim();
+
+  // Fuzzy-Suche: jeder Term mit ~ für Tipp-Toleranz
+  const fuzzyTitle  = safeTitle.split(/\s+/).map(t => `${t}~`).join(' ');
+  const fuzzyArtist = safeArtist.split(/\s+/).map(t => `${t}~`).join(' ');
+
+  const query = safeArtist
+    ? `release:(${fuzzyTitle}) AND artist:(${fuzzyArtist})`
+    : `release:(${fuzzyTitle})`;
 
   const { data } = await http.get('https://musicbrainz.org/ws/2/release/', {
     params: { query, fmt: 'json', limit },

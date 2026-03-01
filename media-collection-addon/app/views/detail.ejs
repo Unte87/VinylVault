@@ -21,6 +21,7 @@
     </a>
     <nav>
       <a href="<%= base %>/">Sammlung</a>
+      <a href="<%= base %>/csv">CSV-Import</a>
       <a href="<%= base %>/items/add" class="btn btn-primary">+ Hinzufügen</a>
     </nav>
   </header>
@@ -36,14 +37,21 @@
           <img src="<%= item.cover_url %>" alt="<%= item.title %>" />
         <% } else { %>
           <div class="cover-placeholder cover-placeholder--large">
-            <span><%= item.media_type.toUpperCase() %></span>
+            <span>🎵</span>
           </div>
         <% } %>
         <div class="detail-badges">
-          <span class="badge badge-type"><%= item.media_type %></span>
           <% if (item.owned)    { %><span class="badge badge-owned">✔ Besitze ich</span><% } %>
           <% if (item.wishlist) { %><span class="badge badge-wish">♥ Wunschliste</span><% } %>
         </div>
+        <% if (item.wishlist) { %>
+          <a
+            class="gh-link gh-link--detail"
+            href="https://www.greenhellrecords.de/?s=<%= encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.title) %>"
+            target="_blank"
+            rel="noopener"
+          >Bei Green Hell Records suchen ↗</a>
+        <% } %>
       </div>
 
       <!-- ── Info & edit form ────────────────────────────────────────────── -->
@@ -71,19 +79,10 @@
             <input id="artist" name="artist" type="text" value="<%= item.artist || '' %>" />
           </div>
 
-          <div class="form-group form-group--half">
-            <div>
-              <label for="year">Jahr</label>
-              <input id="year" name="year" type="text" maxlength="4" value="<%= item.year || '' %>" />
-            </div>
-            <div>
-              <label for="media_type">Typ</label>
-              <select id="media_type" name="media_type">
-                <% for (const t of mediaTypes) { %>
-                  <option value="<%= t %>" <%= item.media_type === t ? 'selected' : '' %>><%= t.charAt(0).toUpperCase() + t.slice(1) %></option>
-                <% } %>
-              </select>
-            </div>
+          <input type="hidden" name="media_type" value="vinyl" />
+          <div class="form-group">
+            <label for="year">Jahr</label>
+            <input id="year" name="year" type="text" maxlength="4" value="<%= item.year || '' %>" />
           </div>
 
           <div class="form-group form-group--inline">
@@ -116,7 +115,14 @@
             <button type="submit" class="btn btn-primary">Speichern</button>
           </div>
         </form>
-
+        <!-- ── Metadaten nachladen ──────────────────────────────────── -->
+        <form
+          method="post"
+          action="<%= base %>/items/<%= item.id %>/refresh"
+          class="refresh-form"
+        >
+          <button type="submit" class="btn btn-secondary btn-refresh">🔄 Metadaten nachladen</button>
+        </form>
         <!-- ── Delete ───────────────────────────────────────────────────── -->
         <form
           method="post"

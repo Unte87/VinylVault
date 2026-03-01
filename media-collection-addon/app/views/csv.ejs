@@ -1,0 +1,93 @@
+<%
+  /*
+   * views/csv.ejs
+   * CSV-Import: Einfügen, Vorschau und Bestätigung.
+   */
+%>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSV-Import – MediaDock</title>
+  <link rel="stylesheet" href="<%= base %>/public/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="<%= base %>/">
+      <span class="logo-icon">🎵</span>
+      <span class="logo-text">MediaDock</span>
+    </a>
+    <nav>
+      <a href="<%= base %>/">Sammlung</a>
+      <a href="<%= base %>/csv">CSV-Import</a>
+      <a href="<%= base %>/items/add" class="btn btn-primary">+ Hinzufügen</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <a href="<%= base %>/" class="back-link">&larr; Zur Sammlung</a>
+    <h1 class="page-title">CSV-Import</h1>
+
+    <% if (typeof result !== 'undefined' && result) { %>
+      <!-- ── Ergebnis ──────────────────────────────────────────────────── -->
+      <div class="alert alert-success">
+        <strong><%= result.count %> Platten</strong> erfolgreich importiert.
+      </div>
+
+      <% if (result.errors && result.errors.length > 0) { %>
+        <div class="alert alert-warning">
+          <strong><%= result.errors.length %> Zeilen</strong> konnten nicht importiert werden:
+          <ul class="csv-error-list">
+            <% for (const e of result.errors) { %>
+              <li><code>Zeile <%= e.row %></code>: <%= e.message %></li>
+            <% } %>
+          </ul>
+        </div>
+      <% } %>
+
+      <div class="form-actions" style="margin-top:1.5rem">
+        <a href="<%= base %>/" class="btn btn-primary">Zur Sammlung</a>
+        <a href="<%= base %>/csv" class="btn btn-ghost">Weiteren Import</a>
+      </div>
+
+    <% } else { %>
+      <!-- ── Eingabeformular ───────────────────────────────────────────── -->
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-error"><%= error %></div>
+      <% } %>
+
+      <p class="form-hint">
+        Füge eine CSV-Tabelle ein. Unterstützte Spalten (Semikolon <em>oder</em> Komma als Trennzeichen):<br />
+        <code>title;artist;year;owned;wishlist;notes</code><br />
+        Die erste Zeile kann eine Kopfzeile sein (wird automatisch erkannt).
+        <code>owned</code> und <code>wishlist</code> akzeptieren <code>1</code>, <code>ja</code> oder <code>true</code>.
+      </p>
+
+      <form class="form-card" method="post" action="<%= base %>/csv">
+        <div class="form-group">
+          <label for="csv">CSV-Daten</label>
+          <textarea
+            id="csv"
+            name="csv"
+            rows="14"
+            placeholder="title;artist;year;owned;wishlist;notes
+Reign in Blood;Slayer;1986;1;0;Klassiker
+World Painted Blood;Slayer;2009;0;1;"
+            required
+          ></textarea>
+        </div>
+        <div class="form-actions">
+          <a href="<%= base %>/" class="btn btn-ghost">Abbrechen</a>
+          <button type="submit" class="btn btn-primary">Importieren</button>
+        </div>
+      </form>
+    <% } %>
+  </main>
+
+  <footer class="site-footer">
+    <small>MediaDock &mdash; persönliche Mediensammlung</small>
+  </footer>
+</body>
+</html>

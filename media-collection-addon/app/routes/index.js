@@ -10,7 +10,7 @@ const router = express.Router();
 const db = require('../database');
 
 // Supported media types used in the filter UI
-const MEDIA_TYPES = ['vinyl', 'cd', 'game', 'bluray', 'dvd', 'book', 'other'];
+const MEDIA_TYPES = ['vinyl'];
 
 router.get('/', (req, res, next) => {
   try {
