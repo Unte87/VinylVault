@@ -1,4 +1,4 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/base:15.0.8
+ARG BUILD_FROM
 FROM $BUILD_FROM
 
 # Install Node.js (LTS) and build dependencies for better-sqlite3
@@ -12,10 +12,11 @@ RUN apk add --no-cache \
 
 # Copy application source
 WORKDIR /app
-COPY app/package*.json ./
+COPY app/package.json ./
 
 # Install Node.js dependencies (includes native compilation for better-sqlite3)
-RUN npm ci --omit=dev
+# npm install instead of npm ci because no lockfile is committed
+RUN npm install --omit=dev
 
 COPY app/ ./
 
