@@ -29,7 +29,7 @@ Home Assistant. Cover art and metadata are fetched automatically from
 3. Select **Repositories**
 4. Add the URL of this repository, e.g.:
    ```
-   https://github.com/christofunterste/MediaDock
+   https://github.com/YOUR_GITHUB_USERNAME/MediaDock
    ```
 5. Click **Add → Close**
 
