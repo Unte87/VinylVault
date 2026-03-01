@@ -18,6 +18,18 @@ const { searchMusicBrainz, searchMusicBrainzMultiple, fetchCoverUrl } = require(
 
 const MEDIA_TYPES = ['vinyl'];
 
+// ── Mehrere Einträge löschen ─────────────────────────────────────────────────────
+router.post('/bulk-delete', (req, res, next) => {
+  try {
+    let ids = req.body.ids || [];
+    if (!Array.isArray(ids)) ids = [ids];
+    db.deleteItems(ids);
+    res.redirect(`${res.app.locals.base}/`);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── Add item ──────────────────────────────────────────────────────────────────
 
 router.get('/add', (req, res) => {

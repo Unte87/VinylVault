@@ -618,6 +618,65 @@ img { max-width: 100%; display: block; }
 .refresh-card-btn .result-add-icon { margin-left: auto; font-size: 1.1rem; color: var(--color-accent); opacity: 0; transition: opacity var(--transition); }
 .refresh-card-btn:hover .result-add-icon { opacity: 1; }
 .result-type { color: var(--color-muted); }
+
+/* ── Bulk-Select ─────────────────────────────────────────────────────────────── */
+.select-mode-toggle  { margin-bottom: .6rem; }
+.btn-sm              { font-size: .8rem; padding: .3rem .7rem; }
+
+/* Checkbox auf jeder Karte – standardmäßig ausgeblendet */
+.item-checkbox-wrap {
+  display: none;
+  position: absolute;
+  top: .5rem;
+  left: .5rem;
+  z-index: 2;
+  cursor: pointer;
+}
+.item-checkbox       { position: absolute; opacity: 0; width: 0; height: 0; }
+.item-checkbox-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 2px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: transparent;
+  font-size: .85rem;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+.item-checkbox:checked + .item-checkbox-box {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+/* Im Auswahl-Modus: Checkbox zeigen, Karten-Klick visuell anzeigen */
+.selection-mode .item-card { position: relative; cursor: pointer; }
+.selection-mode .item-checkbox-wrap { display: flex; }
+.selection-mode .item-card.selected { outline: 2px solid var(--color-accent); border-radius: var(--radius); }
+.selection-mode .item-link { pointer-events: none; }
+
+/* Sticky Bulk-Action-Bar am unteren Bildschirmrand */
+.bulk-action-bar {
+  position: fixed;
+  bottom: -80px;
+  left: 0;
+  right: 0;
+  background: var(--color-surface-2);
+  border-top: 1px solid var(--color-border);
+  padding: .75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 100;
+  transition: bottom .25s ease;
+  box-shadow: 0 -4px 16px rgba(0,0,0,.3);
+}
+.bulk-action-bar.visible { bottom: 0; }
+.bulk-count   { font-size: .9rem; color: var(--color-muted); flex-shrink: 0; }
+.bulk-actions { display: flex; gap: .5rem; margin-left: auto; flex-wrap: wrap; }
 .refresh-score {
   display: inline-block;
   font-size: .68rem;

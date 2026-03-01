@@ -140,4 +140,15 @@ function deleteItem(id) {
   return db.prepare('DELETE FROM items WHERE id = ?').run(id);
 }
 
-module.exports = { init, getDb, getAllItems, getItemById, createItem, updateItem, deleteItem };
+/**
+ * Delete multiple items by ID in a single transaction.
+ * @param {number[]} ids
+ */
+function deleteItems(ids) {
+  if (!ids || ids.length === 0) return;
+  const del = db.prepare('DELETE FROM items WHERE id = ?');
+  const tx  = db.transaction((list) => { for (const id of list) del.run(id); });
+  tx(ids.map(Number));
+}
+
+module.exports = { init, getDb, getAllItems, getItemById, createItem, updateItem, deleteItem, deleteItems };

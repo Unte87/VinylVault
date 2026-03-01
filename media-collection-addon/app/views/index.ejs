@@ -49,9 +49,16 @@
         <p>Noch keine Einträge. <a href="<%= base %>/items/add">Jetzt hinzufügen &rsaquo;</a></p>
       </div>
     <% } else { %>
-      <ul class="item-grid">
+      <div class="select-mode-toggle">
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-toggle-select">☐ Mehrere auswählen</button>
+      </div>
+      <ul class="item-grid" id="item-grid">
         <% for (const item of items) { %>
-          <li class="item-card">
+          <li class="item-card" data-id="<%= item.id %>">
+            <label class="item-checkbox-wrap" aria-label="Auswählen">
+              <input type="checkbox" class="item-checkbox" value="<%= item.id %>" tabindex="-1" />
+              <span class="item-checkbox-box">✔</span>
+            </label>
             <a href="<%= base %>/items/<%= item.id %>" class="item-link">
               <div class="item-cover">
                 <% if (item.cover_url) { %>
@@ -88,10 +95,96 @@
         <% } %>
       </ul>
     <% } %>
+
+    <!-- Hidden bulk-delete form (IDs werden per JS eingefügt) -->
+    <form id="bulk-delete-form" method="post" action="<%= base %>/items/bulk-delete" style="display:none"></form>
   </main>
+
+  <!-- ── Sticky Bulk-Action-Bar ──────────────────────────────────────────── -->
+  <div class="bulk-action-bar" id="bulk-action-bar">
+    <span class="bulk-count" id="bulk-count">0 ausgewählt</span>
+    <div class="bulk-actions">
+      <button type="button" class="btn btn-ghost btn-sm" id="bulk-btn-all">Alle auswählen</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="bulk-btn-none">Aufheben</button>
+      <button type="button" class="btn btn-danger btn-sm" id="bulk-btn-delete">Löschen</button>
+    </div>
+  </div>
 
   <footer class="site-footer">
     <small>MediaDock &mdash; persönliche Mediensammlung</small>
   </footer>
+
+  <script>
+    const BASE      = '<%= base %>';
+    const grid      = document.getElementById('item-grid');
+    const bulkBar   = document.getElementById('bulk-action-bar');
+    const bulkCount = document.getElementById('bulk-count');
+    const btnToggle = document.getElementById('btn-toggle-select');
+    let selectMode  = false;
+
+    function checkboxes() { return grid ? [...grid.querySelectorAll('.item-checkbox')] : []; }
+    function selected()   { return checkboxes().filter(c => c.checked); }
+
+    function updateBar() {
+      const n = selected().length;
+      bulkCount.textContent = n + ' ausgewählt';
+      bulkBar.classList.toggle('visible', selectMode && n > 0);
+    }
+
+    function setSelectMode(on) {
+      selectMode = on;
+      document.body.classList.toggle('selection-mode', on);
+      btnToggle.textContent = on ? '✕ Auswählen beenden' : '☐ Mehrere auswählen';
+      if (!on) {
+        checkboxes().forEach(c => { c.checked = false; c.closest('.item-card').classList.remove('selected'); });
+        bulkBar.classList.remove('visible');
+      }
+    }
+
+    btnToggle?.addEventListener('click', () => setSelectMode(!selectMode));
+
+    grid?.addEventListener('click', e => {
+      if (!selectMode) return;
+      const card = e.target.closest('.item-card');
+      if (!card) return;
+      if (!e.target.closest('.item-checkbox-wrap') && !e.target.closest('.gh-link')) {
+        e.preventDefault();
+        const cb = card.querySelector('.item-checkbox');
+        cb.checked = !cb.checked;
+        card.classList.toggle('selected', cb.checked);
+        updateBar();
+      } else if (e.target.closest('.item-checkbox-wrap')) {
+        setTimeout(() => {
+          const cb = card.querySelector('.item-checkbox');
+          card.classList.toggle('selected', cb.checked);
+          updateBar();
+        }, 0);
+      }
+    });
+
+    document.getElementById('bulk-btn-all')?.addEventListener('click', () => {
+      checkboxes().forEach(c => { c.checked = true; c.closest('.item-card').classList.add('selected'); });
+      updateBar();
+    });
+
+    document.getElementById('bulk-btn-none')?.addEventListener('click', () => {
+      checkboxes().forEach(c => { c.checked = false; c.closest('.item-card').classList.remove('selected'); });
+      updateBar();
+    });
+
+    document.getElementById('bulk-btn-delete')?.addEventListener('click', () => {
+      const ids = selected().map(c => c.value);
+      if (!ids.length) return;
+      if (!confirm(ids.length + ' Einträge wirklich löschen?')) return;
+      const form = document.getElementById('bulk-delete-form');
+      form.querySelectorAll('input').forEach(i => i.remove());
+      ids.forEach(id => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = 'ids'; inp.value = id;
+        form.appendChild(inp);
+      });
+      form.submit();
+    });
+  </script>
 </body>
 </html>
