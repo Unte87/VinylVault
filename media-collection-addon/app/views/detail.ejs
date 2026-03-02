@@ -195,19 +195,24 @@
         if (suggestBtn.dataset.artist) params.set('artist', suggestBtn.dataset.artist);
         const res  = await fetch(`${BASE}/api/search?${params}`);
         const sugs = await res.json();
-        const withCover = sugs.filter(s => s.cover_url);
+        const withCover = sugs.filter(s => s.cover_url || s.rg_cover_url);
         if (!withCover.length) {
           suggestTrack.innerHTML = '<span class="cover-sug-none">Keine Cover-Vorschläge gefunden.</span>';
         } else {
-          suggestTrack.innerHTML = withCover.map(s => `<button
+          suggestTrack.innerHTML = withCover.map(s => {
+            const primary  = s.cover_url || s.rg_cover_url;
+            const fallback = s.cover_url && s.rg_cover_url ? s.rg_cover_url : '';
+            return `<button
             type="button"
             class="cover-sug-item"
             title="${escHtml(s.artist)} – ${escHtml(s.title)}\n${escHtml(s.year)}"
-            data-url="${escHtml(s.cover_url)}"
+            data-url="${escHtml(primary)}"
+            data-rg-url="${escHtml(fallback)}"
             onclick="pickCover(this)"
-          ><img src="${escHtml(s.cover_url)}" alt="" loading="lazy"
-            onerror="this.closest('.cover-sug-item').style.display='none'"
-          /><span class="cover-sug-label">${escHtml(s.year)}</span></button>`).join('');
+          ><img src="${escHtml(primary)}" alt="" loading="lazy"
+            onerror="if(this.dataset.fallback!=='1'&&this.closest('button').dataset.rgUrl){this.dataset.fallback='1';this.src=this.closest('button').dataset.rgUrl;}else{this.closest('.cover-sug-item').style.display='none';}"
+          /><span class="cover-sug-label">${escHtml(s.year)}</span></button>`;
+          }).join('');
         }
         suggestLoaded = true;
         suggestionsEl.style.display = '';
@@ -219,7 +224,9 @@
     });
 
     function pickCover(btn) {
-      const url = btn.dataset.url;
+      // Nimm die tatsächlich geladene Bild-URL (ggf. Fallback auf Release-Group)
+      const img = btn.querySelector('img');
+      const url = (img && img.src) ? img.src : btn.dataset.url;
       document.getElementById('cover-url-input').value  = url;
       document.getElementById('cover-url-hidden').value = url;
       loadPreview(url);

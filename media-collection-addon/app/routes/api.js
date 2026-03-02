@@ -24,8 +24,8 @@ router.get('/search', async (req, res) => {
   const artist = (req.query.artist || '').trim();
   if (!title) return res.status(400).json({ error: 'Parameter q fehlt.' });
   try {
-    const results = await searchMusicBrainzMultiple(title, 8, artist);
-    results.forEach(r => { r.cover_url = fetchCoverUrl(r.mbid); });
+    const results = await searchMusicBrainzMultiple(title, 20, artist);
+    // cover_url bleibt aus mapRelease (Release-Cover), rg_cover_url als Fallback
     res.json(results);
   } catch (err) {
     console.error('Release-Suche fehlgeschlagen:', err.message);

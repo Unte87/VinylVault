@@ -134,7 +134,7 @@ async function searchMusicBrainzMultiple(title, limit = 5, artist = '') {
 
   for (const query of queries) {
     const { data } = await rateLimitedGet('https://musicbrainz.org/ws/2/release/', {
-      params: { query, fmt: 'json', limit, inc: 'tags' },
+      params: { query, fmt: 'json', limit, inc: 'tags release-groups' },
     });
     const results = (data.releases || []).map(mapRelease);
     if (results.length > 0) return results;
@@ -146,7 +146,8 @@ function mapRelease(release) {
   const artist = (release['artist-credit'] || [])
     .map((ac) => (typeof ac === 'string' ? ac : ac.artist?.name || ac.name || ''))
     .join('').trim();
-  const mbid = release.id || '';
+  const mbid   = release.id || '';
+  const rgMbid = release['release-group']?.id || '';
   // Tags nach Vote-Count sortieren, Top-5, kommagetrennt
   const genre = (release.tags || [])
     .sort((a, b) => (b.count || 0) - (a.count || 0))
@@ -158,10 +159,12 @@ function mapRelease(release) {
     artist,
     year: (release.date || '').slice(0, 4),
     mbid,
+    rgMbid,
     genre,
     score: release.score ?? null,
     source: 'musicbrainz',
-    cover_url: mbid ? `https://coverartarchive.org/release/${mbid}/front-250` : '',
+    cover_url:    mbid   ? `https://coverartarchive.org/release/${mbid}/front-250`               : '',
+    rg_cover_url: rgMbid ? `https://coverartarchive.org/release-group/${rgMbid}/front-250` : '',
   };
 }
 
