@@ -173,7 +173,21 @@ router.post('/:id', (req, res, next) => {
     next(err);
   }
 });
+// ── Quick rating (AJAX, kein Redirect) ──────────────────────────────────────
 
+router.post('/:id/rating', (req, res, next) => {
+  try {
+    const id     = Number(req.params.id);
+    const rating = Number(req.body.rating);
+    if (isNaN(rating) || rating < 0 || rating > 5) {
+      return res.status(400).json({ ok: false, error: 'Ungültige Bewertung' });
+    }
+    db.updateItem(id, { rating });
+    res.json({ ok: true, rating });
+  } catch (err) {
+    next(err);
+  }
+});
 // ── Delete item ───────────────────────────────────────────────────────────────
 
 router.post('/:id/delete', (req, res, next) => {

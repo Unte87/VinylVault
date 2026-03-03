@@ -9,8 +9,8 @@
   --color-surface:    #1a1d27;
   --color-surface-2:  #232636;
   --color-border:     #2e3147;
-  --color-primary:    #6c8ef5;
-  --color-primary-dk: #4f6de0;
+  --color-primary:    #4f6de0;
+  --color-primary-dk: #3a56cc;
   --color-danger:     #e05c5c;
   --color-success:    #4caf82;
   --color-wish:       #e05c9e;
@@ -787,6 +787,22 @@ img { max-width: 100%; display: block; }
 .card-stars     { display: flex; gap: .1rem; }
 .star-on        { color: #f5c518; font-size: .7rem; }
 .star-off       { color: var(--color-border); font-size: .7rem; }
+
+/* Stars interaktiv (Übersicht) */
+.card-stars-interactive {
+  display: flex;
+  gap: .15rem;
+  padding: .1rem .45rem .3rem;
+  cursor: pointer;
+  user-select: none;
+}
+.card-stars-interactive .cstar {
+  font-size: .9rem;
+  transition: transform .1s, color .1s;
+  color: var(--color-border);
+}
+.card-stars-interactive .cstar-on  { color: #f5c518; }
+.card-stars-interactive .cstar:hover { transform: scale(1.25); }
 
 /* ── Secondary / Refresh button ────────────────────────────────────────────── */
 .btn-secondary {

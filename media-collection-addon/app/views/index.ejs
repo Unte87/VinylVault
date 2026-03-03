@@ -142,18 +142,16 @@
                   <% if (item.year) { %><span class="item-year"><%= item.year %></span><% } %>
                   <% if (item.owned)    { %><span class="badge badge-owned">✔ Besitze ich</span><% } %>
                   <% if (item.wishlist) { %><span class="badge badge-wish">♥ Wunschliste</span><% } %>
-                  <% if (item.rating > 0) { %>
-                    <span class="card-stars">
-                      <% for (let i = 1; i <= 5; i++) { %><span class="<%= i <= item.rating ? 'star-on' : 'star-off' %>">★</span><% } %>
-                    </span>
-                  <% } %>
                 </p>
               </div>
             </a>
+            <div class="card-stars-interactive" data-id="<%= item.id %>" data-rating="<%= item.rating || 0 %>">
+              <% for (let i = 1; i <= 5; i++) { %><span class="cstar <%= i <= (item.rating || 0) ? 'cstar-on' : 'cstar-off' %>" data-value="<%= i %>">★</span><% } %>
+            </div>
             <% if (item.wishlist) { %>
               <a
                 class="gh-link"
-                href="https://www.greenhellrecords.de/?s=<%= encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.title) %>"
+                href="https://www.greenhell.de/?s=<%= encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.title) %>"
                 target="_blank"
                 rel="noopener"
                 title="Bei Green Hell Records suchen"
@@ -410,6 +408,44 @@
         form.appendChild(inp);
       });
       form.submit();
+    });
+
+    // ── Sterne-Bewertung (Übersicht) ──────────────────────────────────────
+    document.querySelectorAll('.card-stars-interactive').forEach(widget => {
+      const stars = widget.querySelectorAll('.cstar');
+      let cur = Number(widget.dataset.rating);
+
+      function render(n) {
+        stars.forEach((s, i) => {
+          s.classList.toggle('cstar-on',  i < n);
+          s.classList.toggle('cstar-off', i >= n);
+        });
+      }
+
+      stars.forEach((star, idx) => {
+        star.addEventListener('mouseenter', () => render(idx + 1));
+        star.addEventListener('click', async e => {
+          e.stopPropagation();
+          const newRating = (idx + 1 === cur) ? 0 : idx + 1;
+          try {
+            const resp = await fetch(`${BASE}/items/${widget.dataset.id}/rating`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ rating: newRating }),
+            });
+            if (resp.ok) {
+              cur = newRating;
+              widget.dataset.rating = newRating;
+              widget.closest('.item-card').dataset.rating = newRating;
+              render(cur);
+            }
+          } catch (err) {
+            console.error('Bewertung speichern fehlgeschlagen', err);
+          }
+        });
+      });
+
+      widget.addEventListener('mouseleave', () => render(cur));
     });
   </script>
 </body>
