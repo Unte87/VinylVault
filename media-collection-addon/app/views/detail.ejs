@@ -71,7 +71,7 @@
         <% if (item.wishlist) { %>
           <a
             class="gh-link gh-link--detail"
-            href="https://www.greenhell.de/?s=<%= encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.title) %>"
+            href="https://greenhell.de/search/?qs=<%= encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.title).replace(/%20/g, '+') %>"
             target="_blank"
             rel="noopener"
           >Bei Green Hell Records suchen ↗</a>
