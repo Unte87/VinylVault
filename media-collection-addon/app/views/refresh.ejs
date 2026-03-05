@@ -22,7 +22,13 @@
     <div class="nav-wrap">
       <nav class="nav-primary">
         <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label">Sammlung</span></a>
-        <a class="nav-link-desktop" href="<%= base %>/csv">CSV-Import</a>
+        <details class="nav-more nav-csv">
+          <summary class="nav-more-btn" aria-label="CSV">CSV</summary>
+          <div class="nav-more-panel">
+            <a href="<%= base %>/csv">CSV-Import</a>
+            <a href="<%= base %>/csv/export">CSV-Export</a>
+          </div>
+        </details>
         <a class="nav-link-desktop" href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
         <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label">Wunschliste</span></a>
         <a href="<%= base %>/items/add" class="btn btn-primary"><span class="btn-icon">+</span><span class="btn-label">Hinzufügen</span></a>
@@ -30,8 +36,13 @@
       <details class="nav-more">
         <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
         <div class="nav-more-panel">
-          <a href="<%= base %>/csv">CSV-Import</a>
-          <a href="<%= base %>/csv/export">CSV-Export</a>
+          <details class="nav-more-sub">
+            <summary class="nav-more-sub-btn">CSV</summary>
+            <div class="nav-more-sub-panel">
+              <a href="<%= base %>/csv">CSV-Import</a>
+              <a href="<%= base %>/csv/export">CSV-Export</a>
+            </div>
+          </details>
           <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
         </div>
       </details>

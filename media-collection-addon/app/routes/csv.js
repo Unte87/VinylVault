@@ -21,14 +21,16 @@ router.get('/', (req, res) => {
 router.get('/export', (req, res, next) => {
   try {
     const items = db.getAllItems({ media_type: 'all' });
-    const header = ['title', 'artist', 'year', 'owned', 'wishlist', 'notes'];
+    const header = ['title', 'artist', 'year', 'genre', 'owned', 'wishlist', 'notes', 'cover_url'];
     const rows = items.map((item) => [
       item.title || '',
       item.artist || '',
       item.year || '',
+      item.genre || '',
       item.owned ? '1' : '0',
       item.wishlist ? '1' : '0',
       item.notes || '',
+      item.cover_url || '',
     ]);
 
     const csv = [header, ...rows]
