@@ -1345,8 +1345,15 @@ img { max-width: 100%; display: block; }
   /* Carousel-Pfeile nicht abschneiden */
   .carousel-arrow--prev { left: 0; }
   .carousel-arrow--next { right: 0; }
+  
+  /* Carousel-Karten für Mobile anpassen */
   .item-grid.view-carousel {
-    padding-inline: calc(50% - 120px);
+    padding-inline: calc(50% - 100px);
+  }
+  .item-grid.view-carousel .item-card {
+    flex: 0 0 200px;
+    width: 200px;
+    height: 200px;
   }
 
   /* Forms */
