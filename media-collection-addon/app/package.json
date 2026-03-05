@@ -1,6 +1,6 @@
 {
-  "name": "mediadock",
-  "version": "1.0.2",
+  "name": "vinylvault",
+  "version": "1",
   "description": "Self-hosted media collection manager for Home Assistant",
   "main": "server.js",
   "engines": {

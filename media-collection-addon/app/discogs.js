@@ -16,7 +16,7 @@
 const axios = require('axios');
 
 const BASE_URL   = 'https://api.discogs.com';
-const USER_AGENT = 'MediaDock/1.0.6 +https://github.com/YOUR_GITHUB_USERNAME/MediaDock';
+const USER_AGENT = 'VinylVault/1.0 +https://github.com/YOUR_GITHUB_USERNAME/VinylVault';
 
 // ── HTTP-Client ───────────────────────────────────────────────────────────────
 

@@ -1,4 +1,4 @@
-# MediaDock – Home Assistant Add-on
+# VinylVault – Home Assistant Add-on
 
 Self-hosted personal media collection manager. Track vinyl records, CDs, games,
 Blu-rays, DVDs, books and more – with automatic metadata from MusicBrainz and
@@ -24,4 +24,4 @@ in `/data/collection.db`.
 
 ## Support
 
-Please open an issue at the [GitHub repository](https://github.com/YOUR_GITHUB_USERNAME/MediaDock).
+Please open an issue at the [GitHub repository](https://github.com/YOUR_GITHUB_USERNAME/VinylVault).

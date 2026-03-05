@@ -52,5 +52,5 @@ app.use((err, req, res, _next) => {
 db.init();
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`MediaDock läuft auf http://0.0.0.0:${PORT}`);
+  console.log(`VinylVault läuft auf http://0.0.0.0:${PORT}`);
 });

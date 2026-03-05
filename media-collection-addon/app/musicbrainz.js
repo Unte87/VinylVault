@@ -18,7 +18,7 @@
 
 const axios = require('axios');
 
-const USER_AGENT = 'MediaDock/1.0.5 (home-assistant-addon)';
+const USER_AGENT = 'VinylVault/1.0 (home-assistant-addon)';
 
 const http = axios.create({
   timeout: 15_000,

@@ -4,7 +4,7 @@
  * routes/csv.js
  * CSV-Import: Nutzer fügt CSV-Inhalt in ein Textarea-Formular ein.
  * Unterstützte Spalten (erste Zeile = Header, Semikolon oder Komma als Trennzeichen):
- *   title, artist, year, owned, wishlist, notes
+ *   title, artist, year, genre, owned, wishlist, notes, cover_url
  *
  * Einträge werden direkt ohne MusicBrainz-Anfrage angelegt.
  * Metadaten können anschließend über "Metadaten nachladen" in der Detailansicht geholt werden.
@@ -39,7 +39,7 @@ router.get('/export', (req, res, next) => {
 
     const stamp = new Date().toISOString().slice(0, 10);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="mediadock-export-${stamp}.csv"`);
+    res.setHeader('Content-Disposition', `attachment; filename="vinylvault-export-${stamp}.csv"`);
     res.send(csv);
   } catch (err) {
     next(err);
@@ -94,11 +94,12 @@ router.post('/', (req, res, next) => {
         title,
         artist:    col(cells, 'artist'),
         year:      col(cells, 'year'),
+        genre:     col(cells, 'genre'),
         media_type: 'vinyl',
         owned:     ['1', 'true', 'ja', 'yes'].includes(col(cells, 'owned').toLowerCase()) ? 1 : 0,
         wishlist:  ['1', 'true', 'ja', 'yes'].includes(col(cells, 'wishlist').toLowerCase()) ? 1 : 0,
         notes:     col(cells, 'notes'),
-        cover_url: '',
+        cover_url: col(cells, 'cover_url'),
         mbid:      '',
         rating:    0,
       });

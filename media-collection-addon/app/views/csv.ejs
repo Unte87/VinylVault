@@ -9,14 +9,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CSV-Import – MediaDock</title>
+  <title>CSV-Import – VinylVault</title>
   <link rel="stylesheet" href="<%= base %>/public/style.css" />
 </head>
 <body>
   <header class="site-header">
     <a class="logo" href="<%= base %>/">
       <span class="logo-icon">🎵</span>
-      <span class="logo-text">MediaDock</span>
+      <span class="logo-text">VinylVault</span>
     </a>
     <div class="nav-wrap">
       <nav class="nav-primary">
@@ -83,7 +83,7 @@
 
       <p class="form-hint">
         Füge eine CSV-Tabelle ein. Unterstützte Spalten (Semikolon <em>oder</em> Komma als Trennzeichen):<br />
-        <code>title;artist;year;owned;wishlist;notes</code><br />
+        <code>title;artist;year;genre;owned;wishlist;notes;cover_url</code><br />
         Die erste Zeile kann eine Kopfzeile sein (wird automatisch erkannt).
         <code>owned</code> und <code>wishlist</code> akzeptieren <code>1</code>, <code>ja</code> oder <code>true</code>.
       </p>
@@ -95,9 +95,9 @@
             id="csv"
             name="csv"
             rows="14"
-            placeholder="title;artist;year;owned;wishlist;notes
-Reign in Blood;Slayer;1986;1;0;Klassiker
-World Painted Blood;Slayer;2009;0;1;"
+            placeholder="title;artist;year;genre;owned;wishlist;notes;cover_url
+Reign in Blood;Slayer;1986;Thrash;1;0;Klassiker;https://example.com/cover.jpg
+World Painted Blood;Slayer;2009;Thrash;0;1;;"
             required
           ></textarea>
         </div>
@@ -110,7 +110,7 @@ World Painted Blood;Slayer;2009;0;1;"
   </main>
 
   <footer class="site-footer">
-    <small>MediaDock &mdash; persönliche Mediensammlung</small>
+    <small>VinylVault &mdash; persönliche Vinylsammlung</small>
   </footer>
 </body>
 </html>
