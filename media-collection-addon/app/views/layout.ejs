@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%- title %> – VinylVault</title>
+  <title><%- title %> – MediaDock</title>
   <link rel="stylesheet" href="<%= base %>/public/style.css" />
 </head>
 <body>
   <header class="site-header">
     <a class="logo" href="<%= base %>/">
       <span class="logo-icon">🎵</span>
-      <span class="logo-text">VinylVault</span>
+      <span class="logo-text">MediaDock</span>
     </a>
     <div class="nav-wrap">
       <nav class="nav-primary">
@@ -24,6 +24,7 @@
         <summary class="nav-more-btn" aria-label="Menue">Menu</summary>
         <div class="nav-more-panel">
           <a href="<%= base %>/csv">CSV-Import</a>
+          <a href="<%= base %>/csv/export">CSV-Export</a>
           <a href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
         </div>
       </details>
@@ -35,7 +36,7 @@
   </main>
 
   <footer class="site-footer">
-    <small>VinylVault &mdash; persönliche Vinylsammlung</small>
+    <small>MediaDock &mdash; persönliche Mediensammlung</small>
   </footer>
 </body>
 </html>

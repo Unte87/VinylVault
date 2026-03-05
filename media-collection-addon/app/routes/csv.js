@@ -18,6 +18,32 @@ router.get('/', (req, res) => {
   res.render('csv', { imported: null, error: null });
 });
 
+router.get('/export', (req, res, next) => {
+  try {
+    const items = db.getAllItems({ media_type: 'all' });
+    const header = ['title', 'artist', 'year', 'owned', 'wishlist', 'notes'];
+    const rows = items.map((item) => [
+      item.title || '',
+      item.artist || '',
+      item.year || '',
+      item.owned ? '1' : '0',
+      item.wishlist ? '1' : '0',
+      item.notes || '',
+    ]);
+
+    const csv = [header, ...rows]
+      .map((cols) => cols.map(escapeCsvCell).join(';'))
+      .join('\n');
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="mediadock-export-${stamp}.csv"`);
+    res.send(csv);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/', (req, res, next) => {
   try {
     const raw = (req.body.csv || '').trim();
@@ -111,6 +137,14 @@ function parseCsvLine(line, sep) {
   }
   result.push(current);
   return result;
+}
+
+function escapeCsvCell(value) {
+  const text = String(value ?? '');
+  if (/[";\n\r]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
 }
 
 module.exports = router;
