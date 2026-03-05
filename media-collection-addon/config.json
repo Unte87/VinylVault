@@ -1,7 +1,7 @@
 {
   "name": "VinylVault",
   "slug": "vinylvault",
-  "version": "1.1.8",
+  "version": "1",
   "description": "Manage your vinyl collection in Home Assistant. Track owned records and wishlist items, fetch metadata and cover art from MusicBrainz, rate and tag releases, import via CSV, bulk-refresh metadata, and add entire artist discographies to your wishlist in one go. Built as a Vibe Coding experiment with GitHub Copilot.",
   "url": "https://github.com/Unte87/VinylVault",
   "arch": ["aarch64", "amd64", "armhf", "armv7", "i386"],
