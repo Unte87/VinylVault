@@ -218,8 +218,9 @@ img { max-width: 100%; display: block; }
 
 .toolbar-search {
   position: relative;
-  flex: 1 1 180px;
-  min-width: 140px;
+  flex: 1 1 200px;
+  min-width: 120px;
+  max-width: 400px;
 }
 .toolbar-search-icon {
   position: absolute;
@@ -250,6 +251,7 @@ img { max-width: 100%; display: block; }
 .toolbar-right {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: .65rem;
   margin-left: auto;
 }
@@ -258,8 +260,10 @@ img { max-width: 100%; display: block; }
   display: flex;
   align-items: center;
   gap: .5rem;
+  flex: 0 1 auto;
+  min-width: 0;
 }
-.filter-group label { font-size: .82rem; color: var(--color-muted); white-space: nowrap; }
+.filter-group label { font-size: .82rem; color: var(--color-muted); white-space: nowrap; flex-shrink: 0; }
 .filter-group select {
   background: var(--color-surface-2);
   color: var(--color-text);
@@ -268,6 +272,7 @@ img { max-width: 100%; display: block; }
   padding: .3rem .6rem;
   font-size: .85rem;
   cursor: pointer;
+  min-width: 110px;
 }
 .filter-group input[type="checkbox"] {
   accent-color: var(--color-primary);
@@ -285,6 +290,7 @@ img { max-width: 100%; display: block; }
   color: var(--color-muted);
   font-size: .82rem;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* ── Ansicht-Umschalter ─────────────────────────────────────────────────────── */
@@ -1289,6 +1295,23 @@ img { max-width: 100%; display: block; }
 }
 
 /* ── Responsive / Mobile ────────────────────────────────────────────────────── */
+
+/* Tablet und kleinere Desktops – Toolbar stapeln */
+@media (max-width: 900px) {
+  .toolbar {
+    gap: .7rem;
+  }
+  .toolbar-search {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  .toolbar-right {
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+}
+
+/* Kleine Bildschirme / Mobile */
 @media (max-width: 600px) {
 
   /* Header */
@@ -1315,22 +1338,31 @@ img { max-width: 100%; display: block; }
   /* Page title */
   .page-title { font-size: 1.2rem; }
 
-  /* Toolbar – Suche nimmt volle Breite, Filter darunter */
+  /* Toolbar – Mobile-Optimierung */
   .toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: .5rem;
+    gap: .65rem;
     padding: .65rem .75rem;
   }
-  .toolbar-search { flex: 1 1 100%; min-width: unset; }
-  .toolbar-right  {
-    flex-wrap: wrap;
+  .toolbar-search { 
+    flex: 1 1 100%;
+    max-width: none;
+    min-width: unset;
+  }
+  .toolbar-right {
+    flex: 1 1 100%;
     margin-left: 0;
     gap: .5rem;
   }
-  .filter-group { flex: 1 1 auto; }
-  .filter-group select { width: 100%; }
-  .filter-count { width: 100%; text-align: right; }
+  .filter-group select {
+    font-size: .8rem;
+    min-width: 100px;
+  }
+  .filter-group label {
+    font-size: .75rem;
+  }
+  .filter-count { 
+    font-size: .8rem;
+  }
 
   /* Item-Grid – zwei Spalten auf kleinen Bildschirmen */
   .item-grid {
@@ -1342,9 +1374,9 @@ img { max-width: 100%; display: block; }
   .item-grid.view-list .item-cover { flex: 0 0 48px; width: 48px; height: 48px; }
   .item-grid.view-list .item-title { font-size: .82rem; }
 
-  /* Carousel-Pfeile nicht abschneiden */
-  .carousel-arrow--prev { left: 0; }
-  .carousel-arrow--next { right: 0; }
+  /* Carousel-Pfeile sichtbar machen */
+  .carousel-arrow--prev { left: 8px; }
+  .carousel-arrow--next { right: 8px; }
   
   /* Carousel-Karten für Mobile anpassen */
   .item-grid.view-carousel {
