@@ -58,6 +58,7 @@ img { max-width: 100%; display: block; }
   padding: .75rem 1.25rem;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+.btn-icon svg { width: 1em; height: 1em; display: block; }
   position: sticky;
   top: 0;
   z-index: 100;
@@ -98,6 +99,8 @@ img { max-width: 100%; display: block; }
   gap: 1rem;
   flex-wrap: wrap;
 }
+
+.nav-link-collection { display: none; }
 
 .nav-more {
   position: relative;
@@ -266,6 +269,17 @@ img { max-width: 100%; display: block; }
   font-size: .85rem;
   cursor: pointer;
 }
+.filter-group input[type="checkbox"] {
+  accent-color: var(--color-primary);
+}
+.filter-group .checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: .82rem;
+  color: var(--color-muted);
+  cursor: pointer;
+}
 
 .filter-count {
   color: var(--color-muted);
@@ -304,6 +318,17 @@ img { max-width: 100%; display: block; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
   gap: 1.1rem;
+}
+
+.item-group-header {
+  grid-column: 1 / -1;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--color-muted);
+  padding: .35rem .6rem;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
 }
 
 /* ── Karussell-Wrapper ────────────────────────────────────────────────────── */
@@ -1271,7 +1296,7 @@ img { max-width: 100%; display: block; }
   .nav-primary { gap: .5rem; }
   .nav-primary .btn { white-space: nowrap; }
   .nav-link-desktop { display: none; }
-  .nav-link-collection { display: none; }
+  .nav-link-collection { display: inline-flex; }
   .nav-more { display: block; }
 
   /* Container */

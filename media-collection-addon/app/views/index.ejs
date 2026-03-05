@@ -21,7 +21,7 @@
     </a>
     <div class="nav-wrap">
       <nav class="nav-primary">
-        <a class="nav-link-collection" href="<%= base %>/">Sammlung</a>
+        <a class="btn btn-ghost nav-link-collection" href="<%= base %>/"><span class="btn-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="12" r="2" fill="currentColor" /></svg></span><span class="btn-label">Sammlung</span></a>
         <a class="nav-link-desktop" href="<%= base %>/csv">CSV-Import</a>
         <a class="nav-link-desktop" href="<%= base %>/items/bulk-refresh">Massenanalyse</a>
         <a href="<%= base %>/items/wishlist-add" class="btn btn-secondary"><span class="btn-icon">♥</span><span class="btn-label">Wunschliste</span></a>
@@ -79,6 +79,14 @@
         </select>
       </div>
 
+      <!-- Gruppierung -->
+      <div class="filter-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="group-artist" />
+          Nach Künstler
+        </label>
+      </div>
+
       <!-- Ansicht + Zähler -->
       <div class="toolbar-right">
         <span class="filter-count" id="item-count"><%= items.length %> Platten</span>
@@ -128,6 +136,7 @@
               data-id="<%= item.id %>"
               data-title="<%= (item.title  || '').toLowerCase() %>"
               data-artist="<%= (item.artist || '').toLowerCase() %>"
+              data-artist-name="<%= (item.artist || '').replace(/"/g, '&quot;') %>"
               data-year="<%= item.year  || '0' %>"
               data-rating="<%= item.rating || 0 %>"
               data-status="<%= item.owned ? 'owned' : item.wishlist ? 'wishlist' : 'none' %>"
@@ -217,6 +226,8 @@
       const wrap = document.getElementById('carousel-wrap');
       wrap?.classList.toggle('is-carousel', v === 'carousel');
       if (v === 'carousel') initCarousel();
+      toggleGroupingAvailability();
+      applyFiltersAndSort();
     }
 
     VIEWS.forEach(v => document.getElementById('view-' + v)?.addEventListener('click', () => applyView(v)));
@@ -293,20 +304,62 @@
     const searchInput  = document.getElementById('search-input');
     const statusFilter = document.getElementById('status-filter');
     const sortSelect   = document.getElementById('sort-select');
+    const groupArtist  = document.getElementById('group-artist');
 
     // Gespeicherte Einstellungen laden
-    sortSelect.value   = localStorage.getItem('md-sort')   || 'added-desc';
-    statusFilter.value = localStorage.getItem('md-status') || 'all';
+    sortSelect.value    = localStorage.getItem('md-sort')   || 'added-desc';
+    statusFilter.value  = localStorage.getItem('md-status') || 'all';
+    groupArtist.checked = localStorage.getItem('md-group-artist') === 'true';
 
     function allCards() { return grid ? [...grid.querySelectorAll('.item-card')] : []; }
+
+    function clearGroupHeaders() {
+      grid?.querySelectorAll('.item-group-header').forEach(el => el.remove());
+    }
+
+    function renderGrouped(visible, hidden) {
+      clearGroupHeaders();
+      const frag = document.createDocumentFragment();
+      let lastKey = null;
+      visible.forEach(card => {
+        const key = (card.dataset.artist || '').trim();
+        const label = (card.dataset.artistName || '').trim() || 'Unbekannter Künstler';
+        if (key !== lastKey) {
+          const header = document.createElement('li');
+          header.className = 'item-group-header';
+          header.textContent = label;
+          frag.appendChild(header);
+          lastKey = key;
+        }
+        frag.appendChild(card);
+      });
+      grid.appendChild(frag);
+      hidden.forEach(c => grid.appendChild(c));
+    }
+
+    function toggleGroupingAvailability() {
+      if (!groupArtist) return;
+      const disable = currentView === 'carousel';
+      groupArtist.disabled = disable;
+      if (disable && groupArtist.checked) {
+        groupArtist.checked = false;
+        localStorage.setItem('md-group-artist', 'false');
+      }
+    }
 
     function applyFiltersAndSort() {
       const q      = (searchInput?.value || '').toLowerCase().trim();
       const status = statusFilter.value;
-      const sort   = sortSelect.value;
+      let sort     = sortSelect.value;
+      const group  = groupArtist?.checked && currentView !== 'carousel';
+      if (group && sort !== 'artist-asc') {
+        sort = 'artist-asc';
+        sortSelect.value = sort;
+      }
 
       localStorage.setItem('md-sort',   sort);
       localStorage.setItem('md-status', status);
+      localStorage.setItem('md-group-artist', groupArtist?.checked ? 'true' : 'false');
 
       let cards = allCards();
 
@@ -343,7 +396,13 @@
           default: /* added-desc */ return Number(b.dataset.added) - Number(a.dataset.added);
         }
       });
-      visible.forEach(c => grid.appendChild(c));
+      const hidden = cards.filter(c => c.style.display === 'none');
+      if (group) renderGrouped(visible, hidden);
+      else {
+        clearGroupHeaders();
+        visible.forEach(c => grid.appendChild(c));
+        hidden.forEach(c => grid.appendChild(c));
+      }
     }
 
     let debounceTimer;
@@ -353,7 +412,9 @@
     });
     statusFilter?.addEventListener('change', applyFiltersAndSort);
     sortSelect?.addEventListener('change', applyFiltersAndSort);
+    groupArtist?.addEventListener('change', applyFiltersAndSort);
 
+    toggleGroupingAvailability();
     applyFiltersAndSort();
 
     // ── Mehrfachauswahl ────────────────────────────────────────────────────

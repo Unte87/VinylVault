@@ -1,6 +1,6 @@
 {
   "name": "mediadock",
-  "version": "1.1.0",
+  "version": "1.10.1",
   "description": "Self-hosted media collection manager for Home Assistant",
   "main": "server.js",
   "engines": {
