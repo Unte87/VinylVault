@@ -23,4 +23,4 @@ in `/data/collection.db`.
 
 ## Support
 
-Please open an issue at the [GitHub repository](https://github.com/YOUR_GITHUB_USERNAME/VinylVault).
+Please open an issue at the [GitHub repository](https://github.com/Unte87/MediaDock).
