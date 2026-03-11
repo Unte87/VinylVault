@@ -1561,5 +1561,11 @@ img { max-width: 100%; display: block; }
 
   /* Theme Selector Mobile */
   .theme-selector-wrapper { display: none; }
-  .nav-theme-panel { gap: .5rem; }
+  .nav-theme-panel {
+    gap: .5rem;
+    max-height: min(52vh, 320px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
 }
