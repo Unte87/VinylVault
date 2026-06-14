@@ -18,6 +18,9 @@ const { searchMusicBrainz, searchMusicBrainzMultiple, fetchCoverUrl } = require(
 
 const MEDIA_TYPES = ['vinyl'];
 
+// Getrimmter Wert oder Fallback, wenn leer/nicht gesetzt.
+const trimOr = (v, fallback) => (v?.trim() || fallback);
+
 // ── Mehrere Einträge löschen ─────────────────────────────────────────────────────
 router.post('/bulk-delete', (req, res, next) => {
   try {
@@ -166,9 +169,9 @@ router.post('/:id', (req, res, next) => {
       owned: owned === 'on' ? 1 : 0,
       wishlist: wishlist === 'on' ? 1 : 0,
       rating: Number(rating) || 0,
-      title: title?.trim() || undefined,
-      artist: artist?.trim() || undefined,
-      year: year?.trim() || undefined,
+      title: trimOr(title, undefined),
+      artist: trimOr(artist, undefined),
+      year: trimOr(year, undefined),
       media_type: media_type || undefined,
       cover_url: cover_url?.trim() ?? undefined,
     });
@@ -238,12 +241,12 @@ router.post('/:id/refresh/apply', (req, res, next) => {
 
     const { title, artist, year, cover_url, mbid, genre } = req.body;
     db.updateItem(id, {
-      title:     title?.trim()     || item.title,
-      artist:    artist?.trim()    || item.artist,
-      year:      year?.trim()      || item.year,
-      cover_url: cover_url?.trim() || item.cover_url,
-      mbid:      mbid?.trim()      || item.mbid,
-      genre:     genre?.trim()     || item.genre || '',
+      title:     trimOr(title,     item.title),
+      artist:    trimOr(artist,    item.artist),
+      year:      trimOr(year,      item.year),
+      cover_url: trimOr(cover_url, item.cover_url),
+      mbid:      trimOr(mbid,      item.mbid),
+      genre:     trimOr(genre,     item.genre || ''),
     });
 
     // JSON-Antwort für Ajax-Requests (z.B. Massenanalyse)

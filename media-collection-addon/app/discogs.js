@@ -33,7 +33,7 @@ function buildClient(token) {
 
 // ── Rate-Limiter (1 Req/s, geteilt über alle Discogs-Calls) ──────────────────
 
-const RATE_MS    = 1100;
+const RATE_MS    = 1100; // ~1 Anfrage/s gemäß Discogs-Limit, mit Sicherheitspuffer
 let lastCallAt   = 0;
 let callQueue    = Promise.resolve();
 
