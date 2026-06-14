@@ -286,7 +286,9 @@
         // im Stapel dahinter: jede Platte schaut oben mit einem gut sichtbaren
         // Cover-Streifen hervor – wie beim Durchblättern einer echten Plattenkiste.
         const d = pos;
-        const lift  = 34 + (d - 1) * 26;   // erste dahinter weit hochschieben → Cover sichtbar
+        // Hub begrenzen, damit tiefe Karten nicht über die Bühne hinaus in
+        // Header/Toolbar ragen (Mobile-Top = 72px → max. 64 lässt 8px Rand).
+        const lift  = Math.min(64, 34 + (d - 1) * 26);   // erste dahinter weit hoch → Cover sichtbar
         const depth = d * 46;
         const tilt  = 4 + d * 0.9;
         const scale = Math.max(0.72, 1 - d * 0.045);
