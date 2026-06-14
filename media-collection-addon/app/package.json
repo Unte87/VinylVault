@@ -1,6 +1,6 @@
 {
   "name": "vinylvault",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Self-hosted media collection manager for Home Assistant",
   "main": "server.js",
   "engines": {
