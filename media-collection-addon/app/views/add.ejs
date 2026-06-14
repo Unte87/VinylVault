@@ -288,7 +288,10 @@
         const data = await res.json();
         if (!data.length) { el.innerHTML = '<p class="search-empty">' + __('no_artists_found') + '</p>'; return; }
         el.innerHTML = data.map(a => `
-          <div class="artist-card" onclick="loadDiscography('${escHtml(a.mbid)}','${escHtml(a.name).replace(/'/g, '&#39;')}')">
+          <div class="artist-card"
+               data-mbid="${escHtml(a.mbid || '')}"
+               data-name="${escHtml(a.name || '')}"
+               onclick="loadDiscographyFromCard(this)">
             <span class="artist-name">${escHtml(a.name)}</span>
             ${a.disambiguation ? `<span class="artist-dis">${escHtml(a.disambiguation)}</span>` : ''}
             ${a.country         ? `<span class="artist-country">${escHtml(a.country)}</span>` : ''}
@@ -299,6 +302,9 @@
     document.getElementById('art-query').addEventListener('keydown', e => e.key==='Enter' && searchArtists());
 
     // ── Diskografie laden ────────────────────────────────────────────────────
+    function loadDiscographyFromCard(el) {
+      loadDiscography(el.dataset.mbid || '', el.dataset.name || '');
+    }
     async function loadDiscography(mbid, name) {
       const el = document.getElementById('disc-results');
       el.style.display = '';

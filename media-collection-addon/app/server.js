@@ -25,8 +25,8 @@ app.locals.assetVersion = `${addonConfig.version || 'dev'}-${buildStamp}`;
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(morgan('combined'));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
+app.use(express.json({ limit: '5mb' }));
 
 // i18n – detect language from cookie / Accept-Language header
 app.use(i18n.middleware);
@@ -35,7 +35,6 @@ app.use(i18n.middleware);
 // Inject it into res.locals so every template and redirect can use it.
 app.use((req, res, next) => {
   res.locals.base = (req.headers['x-ingress-path'] || '').replace(/\/$/, '');
-  app.locals.base  = res.locals.base; // also keep app.locals in sync for routes
   next();
 });
 
@@ -61,10 +60,13 @@ app.use((req, res) => {
   res.status(404).render('error', { message: res.locals.__('error_404'), base: res.locals.base });
 });
 
-// Global error handler
+// Global error handler. i18n / base may be missing if the error happened before
+// their middleware ran (z.B. ungültiger JSON-Body), daher mit Fallbacks.
 app.use((err, req, res, _next) => {
   console.error(err);
-  res.status(500).render('error', { message: res.locals.__('error_500'), base: res.locals.base });
+  const t    = typeof res.locals.__ === 'function' ? res.locals.__ : (k) => k;
+  const base = res.locals.base || '';
+  res.status(500).render('error', { message: t('error_500'), base });
 });
 
 // ── Startup ───────────────────────────────────────────────────────────────────
