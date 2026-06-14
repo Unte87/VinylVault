@@ -255,80 +255,117 @@
       });
       const wrap = document.getElementById('carousel-wrap');
       wrap?.classList.toggle('is-carousel', v === 'carousel');
-      if (v === 'carousel') initCarousel();
+      if (v === 'carousel') carouselIndex = 0;
+      else clearStackStyles();
       applyFiltersAndSort();
     }
 
     VIEWS.forEach(v => document.getElementById('view-' + v)?.addEventListener('click', () => applyView(v)));
 
-    // ── Coverflow-Karussell ────────────────────────────────────────────────
+    // ── Plattenstapel-Karussell ("durch den Stapel blättern") ───────────────
+    // Die Cover liegen wie in einer Plattenkiste hintereinander. Die vorderste
+    // Karte schaut den Betrachter an; beim "Blättern" kippt sie nach vorn weg
+    // und die nächste rückt auf. Tiefe/Drehung werden je Karte als Inline-Style
+    // gesetzt, die CSS-transition animiert den Übergang.
+    const STACK_DEPTH = 6;   // sichtbare Karten hinter der vordersten
+    let carouselIndex = 0;
+    const prevBtn = document.getElementById('carousel-prev');
+    const nextBtn = document.getElementById('carousel-next');
+
     function visibleCards() {
       return grid ? [...grid.querySelectorAll('.item-card')].filter(c => c.style.display !== 'none') : [];
     }
 
-    function scrollToCard(card) {
-      // Karte mittig im Scroll-Container positionieren
-      const containerCenter = grid.getBoundingClientRect().left + grid.offsetWidth / 2;
-      const cardCenter      = card.getBoundingClientRect().left + card.offsetWidth / 2;
-      grid.scrollBy({ left: cardCenter - containerCenter, behavior: 'smooth' });
+    function applyCardStyle(card, pos) {
+      let transform, opacity, filter, vis = 'visible', pointer = 'none', z;
+      if (pos === 0) {
+        // vorderste Karte – aufrecht und voll sichtbar
+        transform = 'translate3d(0,0,0) rotateX(0deg) scale(1)';
+        opacity = 1; filter = 'brightness(1)'; z = 1000; pointer = 'auto';
+      } else if (pos > 0) {
+        // im Stapel dahinter: nach hinten gekippt, nach oben versetzt, kleiner & dunkler
+        const d = pos;
+        transform = `translate3d(0, ${-d * 15}px, ${-d * 62}px) `
+                  + `rotateX(${5 + d * 1.2}deg) scale(${Math.max(0.62, 1 - d * 0.05)})`;
+        opacity = Math.max(0.1, 1 - d * 0.17);
+        filter  = `brightness(${Math.max(0.45, 1 - d * 0.1)})`;
+        z = 1000 - d;
+        if (d <= STACK_DEPTH) pointer = 'auto'; else vis = 'hidden';
+      } else {
+        // bereits weggeblättert: kippt nach vorn zum Betrachter und blendet aus
+        transform = 'translate3d(0, 52px, 210px) rotateX(-90deg) scale(1)';
+        opacity = 0; filter = 'brightness(1.1)'; z = 1100 - pos;
+        if (pos < -2) vis = 'hidden';
+      }
+      card.style.transform     = transform;
+      card.style.opacity       = opacity;
+      card.style.filter        = filter;
+      card.style.zIndex        = z;
+      card.style.visibility    = vis;
+      card.style.pointerEvents = pointer;
     }
 
-    function getActiveCard() {
-      // Karte die am nächsten zur Mitte des Containers ist
+    function layoutStack() {
       const cards = visibleCards();
-      if (!cards.length) return null;
-      const containerCenter = grid.getBoundingClientRect().left + grid.offsetWidth / 2;
-      let best = cards[0], bestDist = Infinity;
-      cards.forEach(c => {
-        const dist = Math.abs(c.getBoundingClientRect().left + c.offsetWidth / 2 - containerCenter);
-        if (dist < bestDist) { bestDist = dist; best = c; }
+      if (!cards.length) return;
+      carouselIndex = Math.max(0, Math.min(carouselIndex, cards.length - 1));
+      cards.forEach((card, i) => {
+        const pos = i - carouselIndex;
+        card.classList.toggle('carousel-active', pos === 0);
+        applyCardStyle(card, pos);
       });
-      return best;
+      prevBtn?.toggleAttribute('disabled', carouselIndex <= 0);
+      nextBtn?.toggleAttribute('disabled', carouselIndex >= cards.length - 1);
     }
 
-    function updateActiveCard() {
-      const active = getActiveCard();
-      visibleCards().forEach(c => c.classList.toggle('carousel-active', c === active));
+    // Inline-Styles entfernen, wenn das Karussell verlassen wird (sonst bleiben
+    // die 3D-Transforms in Grid-/Listenansicht hängen)
+    function clearStackStyles() {
+      allCards().forEach(c => {
+        c.style.transform = c.style.opacity = c.style.filter = '';
+        c.style.zIndex = c.style.visibility = c.style.pointerEvents = '';
+        c.classList.remove('carousel-active');
+      });
     }
 
-    function initCarousel() {
-      updateActiveCard();
-      grid.addEventListener('scroll', () => {
-        clearTimeout(grid._scrollTimer);
-        grid._scrollTimer = setTimeout(updateActiveCard, 60);
-      }, { passive: true });
+    function carouselGo(delta) {
+      const n = visibleCards().length;
+      if (!n) return;
+      carouselIndex = Math.max(0, Math.min(carouselIndex + delta, n - 1));
+      layoutStack();
     }
 
-    document.getElementById('carousel-prev')?.addEventListener('click', () => {
-      const cards  = visibleCards();
-      const active = getActiveCard();
-      const idx    = cards.indexOf(active);
-      // Zyklisch: springe zum Ende wenn am Anfang
-      const target = cards[idx <= 0 ? cards.length - 1 : idx - 1];
-      if (target) scrollToCard(target);
-    });
-    document.getElementById('carousel-next')?.addEventListener('click', () => {
-      const cards  = visibleCards();
-      const active = getActiveCard();
-      const idx    = cards.indexOf(active);
-      // Zyklisch: springe zum Anfang wenn am Ende
-      const target = cards[idx >= cards.length - 1 ? 0 : idx + 1];
-      if (target) scrollToCard(target);
-    });
-    // Nicht-aktive Karten im Carousel: Klick scrollt zu ihnen
+    prevBtn?.addEventListener('click', () => carouselGo(-1));
+    nextBtn?.addEventListener('click', () => carouselGo(1));
+
+    // Eine Karte aus dem Stapel anklicken blättert nach vorn zu ihr
     document.getElementById('item-grid')?.addEventListener('click', e => {
       if (currentView !== 'carousel') return;
       const card = e.target.closest('.item-card');
       if (!card || card.classList.contains('carousel-active')) return;
       e.preventDefault();
-      scrollToCard(card);
+      const idx = visibleCards().indexOf(card);
+      if (idx >= 0) { carouselIndex = idx; layoutStack(); }
     });
-    // Pfeiltasten
+    // Pfeiltasten blättern durch den Stapel (nicht beim Tippen in Eingabefeldern)
     document.addEventListener('keydown', e => {
       if (currentView !== 'carousel') return;
-      if (e.key === 'ArrowLeft')  document.getElementById('carousel-prev')?.click();
-      if (e.key === 'ArrowRight') document.getElementById('carousel-next')?.click();
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
+      if (e.key === 'ArrowLeft')  carouselGo(-1);
+      if (e.key === 'ArrowRight') carouselGo(1);
     });
+    // Mausrad / Trackpad blättert ebenfalls (gedrosselt, damit nicht zu schnell)
+    let wheelLock = 0;
+    document.getElementById('carousel-wrap')?.addEventListener('wheel', e => {
+      if (currentView !== 'carousel') return;
+      e.preventDefault();
+      const now = Date.now();
+      if (now - wheelLock < 320) return;
+      if (Math.abs(e.deltaY) < 6 && Math.abs(e.deltaX) < 6) return;
+      wheelLock = now;
+      carouselGo((e.deltaY + e.deltaX) > 0 ? 1 : -1);
+    }, { passive: false });
 
     // ── Suche + Filter + Sortierung ────────────────────────────────────────
     const searchInput  = document.getElementById('search-input');
@@ -443,6 +480,9 @@
         visible.forEach(c => grid.appendChild(c));
         hidden.forEach(c => grid.appendChild(c));
       }
+
+      // Im Plattenstapel nach Suche/Filter/Sortierung wieder oben beginnen
+      if (currentView === 'carousel') { carouselIndex = 0; layoutStack(); }
     }
 
     let debounceTimer;

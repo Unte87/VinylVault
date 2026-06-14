@@ -445,56 +445,63 @@ img { max-width: 100%; display: block; }
 .carousel-arrow--prev        { left:  -22px; }
 .carousel-arrow--next        { right: -22px; }
 .carousel-wrap.is-carousel .carousel-arrow { display: flex; }
+.carousel-arrow[disabled] {
+  opacity: .3;
+  cursor: default;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
 
-/* ── Coverflow: ein Cover zentriert, Nachbarn peek-in ─────────────────────── */
+/* ── Plattenstapel: durch einen Stapel Cover „blättern“ ───────────────────── */
 .item-grid.view-carousel {
-  /* Horizontaler Scroll-Streifen */
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  overflow-x: scroll;
-  overflow-y: visible;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-  gap: 1.5rem;
-  /* Zentrierung: linkes + rechtes Padding = (containerBreite - Kartenbreite)/2 */
-  padding-inline: calc(50% - 130px);
-  /* genügend Höhe für Scale-Effekt */
-  padding-top: 2rem;
-  padding-bottom: 2.5rem;
+  /* 3D-Bühne statt Scroll-Streifen */
+  display: block;
+  position: relative;
+  height: 470px;
+  margin: 1rem auto 0;
+  padding: 0;
+  overflow: visible;
+  list-style: none;
+  perspective: 1700px;
+  perspective-origin: 50% 36%;
   /* Grid-Basis überschreiben */
   grid-template-columns: unset;
+  gap: 0;
 }
-.item-grid.view-carousel::-webkit-scrollbar { display: none; }
 
-/* Jede Karte: quadratisch wie ein Plattencover */
+/* Jede Karte: quadratisch wie ein Plattencover, im Stapel zentriert.
+   Position, Tiefe und Drehung werden per JS (Inline-Style) gesetzt –
+   hier nur Aussehen + die Übergangsanimation fürs „Blättern“. */
 .item-grid.view-carousel .item-card {
-  flex: 0 0 260px;
-  width: 260px;
-  height: 260px;
-  scroll-snap-align: center;
-  position: relative;
+  position: absolute;
+  top: 88px;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  margin-left: -150px;
   border: none;
   border-radius: var(--radius-lg, 14px);
-  box-shadow: 0 6px 28px rgba(0,0,0,.55);
+  box-shadow: 0 18px 50px rgba(0,0,0,.6);
   overflow: hidden;
   background: var(--color-surface-2);
-  /* abgeblendet, etwas kleiner */
-  transform: scale(0.82);
-  opacity: .55;
-  filter: brightness(.75);
-  transition: transform .38s ease, opacity .38s ease, filter .38s ease, box-shadow .38s ease;
+  /* Scharnier an der Unterkante – wie eine Platte, die in der Kiste lehnt */
+  transform-origin: 50% 100%;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  transition: transform .5s cubic-bezier(.22,.61,.36,1),
+              opacity   .45s ease,
+              filter    .45s ease;
   cursor: pointer;
 }
-/* Die aktive (zentrierte) Karte ist groß und voll sichtbar */
+/* Die vorderste (aktive) Karte ist voll sichtbar und nicht klickbar zum Wechseln */
 .item-grid.view-carousel .item-card.carousel-active {
-  transform: scale(1);
-  opacity: 1;
-  filter: brightness(1);
-  box-shadow: 0 16px 56px rgba(0,0,0,.75);
+  box-shadow: 0 26px 70px rgba(0,0,0,.78);
   cursor: default;
-  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item-grid.view-carousel .item-card { transition-duration: .12s; }
 }
 /* Link füllt die Karte */
 .item-grid.view-carousel .item-link {
@@ -1505,14 +1512,16 @@ img { max-width: 100%; display: block; }
   .carousel-arrow--prev { left: 8px; }
   .carousel-arrow--next { right: 8px; }
   
-  /* Carousel-Karten für Mobile anpassen */
+  /* Plattenstapel für Mobile kompakter */
   .item-grid.view-carousel {
-    padding-inline: calc(50% - 100px);
+    height: 400px;
+    perspective: 1300px;
   }
   .item-grid.view-carousel .item-card {
-    flex: 0 0 200px;
-    width: 200px;
-    height: 200px;
+    top: 72px;
+    width: 230px;
+    height: 230px;
+    margin-left: -115px;
   }
 
   /* Forms */
