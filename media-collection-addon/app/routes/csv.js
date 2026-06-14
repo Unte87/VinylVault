@@ -53,16 +53,19 @@ router.post('/', (req, res, next) => {
       return res.render('csv', { imported: null, error: 'Keine Daten eingegeben.' });
     }
 
-    const lines = raw.split(/\r?\n/).filter(Boolean);
-    if (lines.length < 2) {
+    // Trennzeichen auto-erkennen (Semikolon bevorzugt, sonst Komma)
+    const firstLine = raw.split(/\r?\n/, 1)[0] || '';
+    const sep = firstLine.includes(';') ? ';' : ',';
+
+    // Ganzen Text in einem Durchgang parsen – respektiert Anführungszeichen,
+    // auch mehrzeilige Felder und verdoppelte Quotes ("").
+    const rows = parseCsv(raw, sep);
+    if (rows.length < 2) {
       return res.render('csv', { imported: null, error: 'CSV muss mindestens eine Header-Zeile und eine Datenzeile enthalten.' });
     }
 
-    // Trennzeichen auto-erkennen (Semikolon bevorzugt, sonst Komma)
-    const sep = lines[0].includes(';') ? ';' : ',';
-
     // Header normalisieren
-    const headers = lines[0].split(sep).map(h => h.trim().toLowerCase().replace(/[^a-z_]/g, ''));
+    const headers = (rows[0] || []).map(h => h.trim().toLowerCase().replace(/[^a-z_]/g, ''));
 
     const colIdx = name => {
       const i = headers.indexOf(name);
@@ -77,12 +80,11 @@ router.post('/', (req, res, next) => {
     let importedCount = 0;
     const errors = [];
 
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
+    for (let i = 1; i < rows.length; i++) {
+      const cells = rows[i];
+      // Leerzeilen (z.B. abschließender Zeilenumbruch) überspringen
+      if (!cells || cells.every(c => (c || '').trim() === '')) continue;
 
-      // CSV-Felder parsen – einfaches Splitting (Anf. behandeln)
-      const cells = parseCsvLine(line, sep);
       const title = col(cells, 'title');
 
       if (!title) {
@@ -116,34 +118,49 @@ router.post('/', (req, res, next) => {
 });
 
 /**
- * Einfacher CSV-Zeilenparser mit Anführungszeichen-Support.
- * @param {string} line
+ * CSV-Parser über den gesamten Text. Respektiert Anführungszeichen inkl.
+ * eingebetteter Zeilenumbrüche und verdoppelter Quotes ("").
+ * @param {string} text
  * @param {string} sep
- * @returns {string[]}
+ * @returns {string[][]} Zeilen mit Zellen
  */
-function parseCsvLine(line, sep) {
-  const result = [];
-  let current = '';
+function parseCsv(text, sep) {
+  const rows = [];
+  let row = [];
+  let cur = '';
   let inQuotes = false;
 
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
-      else inQuotes = !inQuotes;
-    } else if (ch === sep && !inQuotes) {
-      result.push(current);
-      current = '';
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { cur += '"'; i++; }
+        else inQuotes = false;
+      } else {
+        cur += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === sep) {
+      row.push(cur); cur = '';
+    } else if (ch === '\n') {
+      row.push(cur); rows.push(row); row = []; cur = '';
+    } else if (ch === '\r') {
+      // \r\n: das \n erledigt den Zeilenumbruch; einzelnes \r ignorieren
     } else {
-      current += ch;
+      cur += ch;
     }
   }
-  result.push(current);
-  return result;
+  row.push(cur);
+  rows.push(row);
+  return rows;
 }
 
 function escapeCsvCell(value) {
-  const text = String(value ?? '');
+  let text = String(value ?? '');
+  // Formel-Injection verhindern: Zellen, die mit einem Steuerzeichen beginnen,
+  // mit einem führenden Apostroph entschärfen (Excel/LibreOffice/Sheets).
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
   if (/[";\n\r]/.test(text)) {
     return `"${text.replace(/"/g, '""')}"`;
   }

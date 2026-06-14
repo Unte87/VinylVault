@@ -18,13 +18,16 @@ const { searchMusicBrainz, searchMusicBrainzMultiple, fetchCoverUrl } = require(
 
 const MEDIA_TYPES = ['vinyl'];
 
+// Getrimmter Wert oder Fallback, wenn leer/nicht gesetzt.
+const trimOr = (v, fallback) => (v?.trim() || fallback);
+
 // ── Mehrere Einträge löschen ─────────────────────────────────────────────────────
 router.post('/bulk-delete', (req, res, next) => {
   try {
     let ids = req.body.ids || [];
     if (!Array.isArray(ids)) ids = [ids];
     db.deleteItems(ids);
-    res.redirect(`${res.app.locals.base}/`);
+    res.redirect(`${res.locals.base}/`);
   } catch (err) {
     next(err);
   }
@@ -43,8 +46,13 @@ router.post('/wishlist-add', async (req, res, next) => {
     if (!Array.isArray(items)) items = [items];
 
     for (const raw of items) {
-      const item = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      if (!item.title) continue;
+      let item;
+      try {
+        item = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      } catch {
+        continue; // defekten Eintrag überspringen statt den ganzen Batch abzubrechen
+      }
+      if (!item || !item.title) continue;
       db.createItem({
         title:     item.title     || '',
         artist:    item.artist    || '',
@@ -118,7 +126,7 @@ router.post('/add', async (req, res, next) => {
       mbid:       finalMbid,
     });
 
-    res.redirect(`${res.app.locals.base}/`);
+    res.redirect(`${res.locals.base}/`);
   } catch (err) {
     next(err);
   }
@@ -141,7 +149,7 @@ router.get('/bulk-refresh', (req, res, next) => {
 router.get('/:id', (req, res, next) => {
   try {
     const item = db.getItemById(Number(req.params.id));
-    if (!item) return res.status(404).render('error', { message: 'Item nicht gefunden.', base: res.app.locals.base });
+    if (!item) return res.status(404).render('error', { message: 'Item nicht gefunden.', base: res.locals.base });
     res.render('detail', { item, mediaTypes: MEDIA_TYPES });
   } catch (err) {
     next(err);
@@ -161,14 +169,14 @@ router.post('/:id', (req, res, next) => {
       owned: owned === 'on' ? 1 : 0,
       wishlist: wishlist === 'on' ? 1 : 0,
       rating: Number(rating) || 0,
-      title: title?.trim() || undefined,
-      artist: artist?.trim() || undefined,
-      year: year?.trim() || undefined,
+      title: trimOr(title, undefined),
+      artist: trimOr(artist, undefined),
+      year: trimOr(year, undefined),
       media_type: media_type || undefined,
       cover_url: cover_url?.trim() ?? undefined,
     });
 
-    res.redirect(`${res.app.locals.base}/items/${id}`);
+    res.redirect(`${res.locals.base}/items/${id}`);
   } catch (err) {
     next(err);
   }
@@ -193,7 +201,7 @@ router.post('/:id/rating', (req, res, next) => {
 router.post('/:id/delete', (req, res, next) => {
   try {
     db.deleteItem(Number(req.params.id));
-    res.redirect(`${res.app.locals.base}/`);
+    res.redirect(`${res.locals.base}/`);
   } catch (err) {
     next(err);
   }
@@ -206,7 +214,7 @@ router.get('/:id/refresh', async (req, res, next) => {
   try {
     const id   = Number(req.params.id);
     const item = db.getItemById(id);
-    if (!item) return res.status(404).render('error', { message: 'Item nicht gefunden.', base: res.app.locals.base });
+    if (!item) return res.status(404).render('error', { message: 'Item nicht gefunden.', base: res.locals.base });
 
     let suggestions = [];
     let searchError = null;
@@ -229,21 +237,21 @@ router.post('/:id/refresh/apply', (req, res, next) => {
   try {
     const id = Number(req.params.id);
     const item = db.getItemById(id);
-    if (!item) return res.status(404).render('error', { message: 'Item nicht gefunden.', base: res.app.locals.base });
+    if (!item) return res.status(404).render('error', { message: 'Item nicht gefunden.', base: res.locals.base });
 
     const { title, artist, year, cover_url, mbid, genre } = req.body;
     db.updateItem(id, {
-      title:     title?.trim()     || item.title,
-      artist:    artist?.trim()    || item.artist,
-      year:      year?.trim()      || item.year,
-      cover_url: cover_url?.trim() || item.cover_url,
-      mbid:      mbid?.trim()      || item.mbid,
-      genre:     genre?.trim()     || item.genre || '',
+      title:     trimOr(title,     item.title),
+      artist:    trimOr(artist,    item.artist),
+      year:      trimOr(year,      item.year),
+      cover_url: trimOr(cover_url, item.cover_url),
+      mbid:      trimOr(mbid,      item.mbid),
+      genre:     trimOr(genre,     item.genre || ''),
     });
 
     // JSON-Antwort für Ajax-Requests (z.B. Massenanalyse)
     if (req.query.json) return res.json({ ok: true });
-    res.redirect(`${res.app.locals.base}/items/${id}`);
+    res.redirect(`${res.locals.base}/items/${id}`);
   } catch (err) {
     next(err);
   }

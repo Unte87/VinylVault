@@ -331,7 +331,10 @@
         const data = await res.json();
         if (!data.length) { el.innerHTML = '<p class="search-empty">' + __('no_artists_found') + '</p>'; return; }
         el.innerHTML = data.map(a => `
-          <div class="artist-card" onclick="loadDisc('${escHtml(a.mbid)}','${escHtml(a.name).replace(/'/g, '&#39;')}')">
+          <div class="artist-card"
+               data-mbid="${escHtml(a.mbid || '')}"
+               data-name="${escHtml(a.name || '')}"
+               onclick="loadDiscFromCard(this)">
             <span class="artist-name">${escHtml(a.name)}</span>
             ${a.disambiguation ? `<span class="artist-dis">${escHtml(a.disambiguation)}</span>` : ''}
             ${a.country        ? `<span class="artist-country">${escHtml(a.country)}</span>`        : ''}
@@ -339,6 +342,9 @@
       } catch { el.innerHTML = '<p class="search-error">' + __('search_failed') + '</p>'; }
     }
 
+    function loadDiscFromCard(el) {
+      loadDisc(el.dataset.mbid || '', el.dataset.name || '');
+    }
     async function loadDisc(mbid, name) {
       await loadKnown();
       selected.clear(); allCards = []; updateToolbar();

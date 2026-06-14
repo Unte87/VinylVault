@@ -41,12 +41,25 @@ function init() {
     );
   `);
 
-  // Migration: rating-Feld für bestehende Datenbanken hinzufügen
-  try { db.exec('ALTER TABLE items ADD COLUMN rating INTEGER NOT NULL DEFAULT 0'); } catch (_) { /* bereits vorhanden */ }
-  // Migration: genre-Feld für bestehende Datenbanken hinzufügen
-  try { db.exec('ALTER TABLE items ADD COLUMN genre TEXT'); } catch (_) { /* bereits vorhanden */ }
+  // Migrationen für bestehende Datenbanken. Nur "Spalte existiert bereits"
+  // ignorieren – echte Fehler (z.B. Schreibrechte, volle Platte) durchreichen.
+  addColumnIfMissing('rating INTEGER NOT NULL DEFAULT 0');
+  addColumnIfMissing('genre TEXT');
 
   console.log(`Datenbank initialisiert: ${DB_PATH}`);
+}
+
+/**
+ * Fügt eine Spalte hinzu, falls sie noch nicht existiert. Andere Fehler als
+ * "duplicate column" werden weitergereicht, damit echte Probleme auffallen.
+ * @param {string} columnDef z.B. "genre TEXT"
+ */
+function addColumnIfMissing(columnDef) {
+  try {
+    db.exec(`ALTER TABLE items ADD COLUMN ${columnDef}`);
+  } catch (err) {
+    if (!/duplicate column/i.test(err.message)) throw err;
+  }
 }
 
 /** Return the raw better-sqlite3 instance (for advanced use). */
