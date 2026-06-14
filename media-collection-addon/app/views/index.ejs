@@ -373,6 +373,34 @@
       carouselGo((e.deltaY + e.deltaX) > 0 ? 1 : -1);
     }, { passive: false });
 
+    // Touch: auf dem Handy mit hoch/runter (oder links/rechts) wischen blättern.
+    // Hochwischen → nächste Platte, runterwischen → vorherige.
+    let touchStartX = 0, touchStartY = 0, touchActive = false;
+    const carWrap = document.getElementById('carousel-wrap');
+    carWrap?.addEventListener('touchstart', e => {
+      if (currentView !== 'carousel' || e.touches.length !== 1) { touchActive = false; return; }
+      touchActive = true;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    carWrap?.addEventListener('touchmove', e => {
+      // vertikales Wischen abfangen, damit die Seite nicht mitscrollt
+      if (touchActive && currentView === 'carousel') e.preventDefault();
+    }, { passive: false });
+    carWrap?.addEventListener('touchend', e => {
+      if (!touchActive || currentView !== 'carousel') return;
+      touchActive = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStartX;
+      const dy = t.clientY - touchStartY;
+      // dominante Achse bestimmt die Richtung; Mindestweg gegen versehentliche Tipper
+      const horizontal = Math.abs(dx) > Math.abs(dy);
+      const dist = horizontal ? dx : dy;
+      if (Math.abs(dist) < 30) return;
+      // hoch/links wischen → nächste, runter/rechts wischen → vorherige
+      carouselGo(dist < 0 ? 1 : -1);
+    }, { passive: true });
+
     // ── Suche + Filter + Sortierung ────────────────────────────────────────
     const searchInput  = document.getElementById('search-input');
     const statusFilter = document.getElementById('status-filter');
